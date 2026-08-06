@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAT and RAT</title>
+    <!-- Bulma CSS: https://bulma.io/ -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+    <!-- EasyMDE: https://github.com/Ionaru/easy-markdown-editor >
+    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css" >
+    <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script -->
+    <!-- HTMX: https://htmx.org/ -->
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V" crossorigin="anonymous"></script>
+    <style>
+      .modal.is-active { display: flex; }
+      .category-highlight {
+        background-color: #d5ebfa; /* blue */
+        font-weight: 600;
+      }
+      .caption{
+        font-size: 0.9em;
+        color: gray;
+        font-weight: bold;
+      }
+      .field_box_big{
+        display: inline-block; 
+        width: 380px; 
+        height: 42px; 
+        border: 1px solid black; 
+        margin-left: 20px; 
+        padding: 5px; 
+        border-radius: 5px; 
+        background-color: #f5f5f5;
+      }
+      .field_box_medium{
+        display: inline-block; 
+        width: 190px; 
+        height: 42px; 
+        border: 1px solid black; 
+        margin-left: 20px; 
+        padding: 5px; 
+        border-radius: 5px; 
+        background-color: #f5f5f5;
+      }
+      .field_box_small{
+        display: inline-block; 
+        width: 100px; 
+        height: 42px; 
+        border: 1px solid black; 
+        margin-left: 20px; 
+        padding: 5px; 
+        border-radius: 5px; 
+        background-color: #f5f5f5;
+      }
+    </style>
+    <script>
+      log	= (msg)=>{window.console&&console.log(msg);}
+      //---------------------------------------------------------------------------
+      // set nav_bar link and text
+      //---------------------------------------------------------------------------
+      function set_nav_bar(elm_id, url, text){
+        const elm = document.getElementById(elm_id);
+        if (elm){
+          log('Got nav element: '+elm_id);
+          if (url){
+            elm.href = url;
+            log('Got nav url: '+url);
+
+          }// if url
+          if (text){
+            elm.textContent = text;
+            log('Got nav text: '+text);
+          }// if text
+        }//if elm
+      }// function set_nav_bar
+    </script>
+  </head>
+  <body class="section">
+    {% csrf_token %}
+    <script>
+      document.body.addEventListener('htmx:configRequest', (event) => {
+        const token = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (token) {
+          event.detail.headers['X-CSRFToken'] = token.value;
+        }
+      });
+    </script>
+
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+      <div id="mainNavbar" class="navbar-menu">
+        <!-- LEFT side -->
+        <div class="navbar-start">
+          <a class="navbar-item" >Home</a>
+        </div>
+
+        <!-- RIGHT side -->
+        <div class="navbar-end">
+          <div class="navbar-item">
+            <div class="buttons">
+              {% if user.is_authenticated %}
+                <a class="navbar-item">Hi, {{ user.first_name }}</a> |
+                <a class="button is-light" hx-post="{% url 'logout' %}">Logout</a>
+              {% else %}
+                <a class="button is-primary" hx-post="{% url 'login' %}">Login</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <!-- Modal placeholder -->
+    <div id="modal-container"></div>
+
+    <script>
+      // close modal when clicking background or "x"
+      document.body.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-background') || e.target.classList.contains('modal-close')) {
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active'));
+        }
+      });
+    </script>
+  </body>
+</html>
