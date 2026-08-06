@@ -1,0 +1,12 @@
+---
+Run Django: 		python manage.py runserver
+
+Run migration: 		python manage.py migrate
+Prepare migration: 	python manage.py makemigrations
+
+Create admin: 		python manage.py createsuperuser
+Create app: 		python manage.py startapp users
+Create project: 	django-admin startproject django_project .
+---
+Check modules for vulnerabilities: pip-audit
+Update pip module: pip install --upgrade <package_name>
