@@ -3,5 +3,6 @@ from django.urls import path     # type: ignore
 from . import views
 
 urlpatterns = [
-    path("", views.index, name="index"),
+    path("", views.main, name="main"),
+    path("asset/", views.asset_list, name="asset_list"),
 ]

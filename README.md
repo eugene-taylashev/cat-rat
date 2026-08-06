@@ -12,10 +12,13 @@ Auditor - review controls and evidence, perform audit steps
 
 
 ### Initial steps
-1. Create project: 			django-admin startproject app cat-rat
-2. Create application: 		python manage.py startapp car
-3. Test functionality: 		python manage.py runserver
-4. Setup database: 			python manage.py migrate
-5. Add admin:				python manage.py createsuperuser
-6. Configure project and app to show custom index page
-7. Configure logon page/functionality
+1. Install record change history application: 	pip install django-simple-history
+2. Install user-support app: 					pip install django-currentuser
+3. Create project: 			django-admin startproject app cat-rat
+4. Create application: 		python manage.py startapp car
+5. Test functionality: 		python manage.py runserver
+6. Setup database: 			python manage.py migrate
+7. Add admin:				python manage.py createsuperuser
+8. Configure project and app to show custom index page
+9. Configure logon page + admin functions
+10. Create initial tables: Owner, Asset

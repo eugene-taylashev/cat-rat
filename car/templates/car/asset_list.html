@@ -1,0 +1,30 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<script>document.title = "{{ ptitle }}";</script>
+    <div class="container">
+      <h1 class="title">Your Assets</h1>
+
+      <table class="table is-striped is-hoverable is-fullwidth">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+        {% for ass in asset_list %}
+            <td style="padding-left: {{ ass.indent }}px;">
+                {{ ass.name }}</td>
+            <td>{{ ass.description }}</td>
+          </tr><tr>
+        {% empty %}
+            <td colspan="3">No assets are assigned to you.</td>
+        {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+{% endblock %}
