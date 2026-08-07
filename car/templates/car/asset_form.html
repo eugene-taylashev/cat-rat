@@ -1,0 +1,127 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+    <div class="container">
+      <h1 class="title" id="asset_title">Your Asset</h1>
+      <script>document.title = "{{ ptitle }}";
+        let elm = document.getElementById("asset_title");
+        if (elm) {
+            elm.innerHTML = "{{ ptitle }}";
+        }
+      </script>
+        <form method="post">
+            {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="notification is-danger">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="field">
+        <label class="label" for="{{ form.name.id_for_label }}">
+            Name
+        </label>
+
+        <div class="control">
+            {{ form.name }}
+        </div>
+
+        {% for error in form.name.errors %}
+            <p class="help is-danger">{{ error }}</p>
+        {% endfor %}
+    </div>
+
+
+    <div class="field">
+        <label class="label" for="{{ form.description.id_for_label }}">
+            Description
+        </label>
+
+        <div class="control">
+            {{ form.description }}
+        </div>
+
+        {% for error in form.description.errors %}
+            <p class="help is-danger">{{ error }}</p>
+        {% endfor %}
+    </div>
+
+
+    <div class="field">
+        <label class="label" for="{{ form.parent.id_for_label }}">
+            Parent Asset
+        </label>
+
+        <div class="control">
+            <div class="select is-fullwidth">
+                {{ form.parent }}
+            </div>
+        </div>
+
+        {% for error in form.parent.errors %}
+            <p class="help is-danger">{{ error }}</p>
+        {% endfor %}
+    </div>
+
+
+    <div class="field">
+        <label class="label" for="{{ form.owner.id_for_label }}">
+            Owner
+        </label>
+
+        <div class="control">
+            <div class="select is-fullwidth">
+                {{ form.owner }}
+            </div>
+        </div>
+
+        {% for error in form.owner.errors %}
+            <p class="help is-danger">{{ error }}</p>
+        {% endfor %}
+    </div>
+
+
+    <div class="field">
+        <div class="control">
+            <label class="checkbox">
+                {{ form.is_active }}
+                Active
+            </label>
+        </div>
+
+        {% for error in form.is_active.errors %}
+            <p class="help is-danger">{{ error }}</p>
+        {% endfor %}
+    </div>
+
+    <table class="table">
+      <tr class="thead">
+        <td>Record</td><td>When</td><td>By</td>
+      </tr>
+      <tr>
+        <td class="caption">Created</td><td>{{ asset.created_at }}</td>
+        <td>{{ asset.created_by|default:"admin" }}</td>
+      </tr>
+      <tr>
+        <td class="caption">Updated</td><td>{{ asset.updated_at }}</td>
+        <td>{{ asset.updated_by|default:"admin" }}</td>
+      </tr>
+    </table>
+
+    <div class="field is-grouped mt-5">
+        <div class="control">
+            <button type="submit" class="button is-primary">
+                Save
+            </button>
+        </div>
+
+        <div class="control">
+            <a href="{% url 'asset_list' %}" class="button is-light">
+                Cancel
+            </a>
+        </div>
+    </div>
+        </form>
+    </div>
+{% endblock %}

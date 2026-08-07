@@ -1,8 +1,8 @@
 ---
 Run Django: 		python manage.py runserver
 
-Run migration: 		python manage.py migrate
-Prepare migration: 	python manage.py makemigrations
+Run migration: 		python3 manage.py migrate
+Prepare migration: 	python3 manage.py makemigrations
 
 Create admin: 		python manage.py createsuperuser
 Create app: 		python manage.py startapp users

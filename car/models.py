@@ -15,8 +15,8 @@ class TimestampedModel(models.Model):
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        default='admin',
         null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         related_name="%(class)s_created",
         editable=False,
@@ -41,16 +41,18 @@ class TimestampedModel(models.Model):
         abstract = True
 
     def save(self, *args, user=None, **kwargs):
-        ''' In app use asset.save(user=request.user) '''
+        """Save the object and record the user who created/updated it."""
+
         if user is not None:
-            if self._state.adding and self.created_by is None:
+            # New object
+            if self._state.adding:
                 self.created_by = user
 
+            # Every save
             self.updated_by = user
             self.updated_by_username = user.get_username()
 
         super().save(*args, **kwargs)
-
 
 #==============================================================================
 class Owner(TimestampedModel):
@@ -112,9 +114,11 @@ class Asset(TimestampedModel):
     )
     owner = models.ForeignKey(Owner,on_delete=models.PROTECT,blank=True,null=True) 
     is_active = models.BooleanField(default=True)
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ["name"]
 
     def __str__(self):
         return self.name
+
