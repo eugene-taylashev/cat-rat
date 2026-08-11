@@ -65,11 +65,15 @@ def asset_list(request):
 def asset_form(request, pk=0):
     '''
     View/edit one asset by ID/pk or create new with pk=0
-        input: request, asset_id
+        input: request, primary_key
         output: rendered HTML page
     '''
     if pk == 0:
         asset = Asset()
+        #ownermembership__is_primary=True,
+        asset.owner = Owner.objects.filter(
+            ownermembership__user=request.user,
+            ).first()
     else:
         asset = get_object_or_404(Asset, pk=pk)
         #can_edit = can_edit_asset(request.user, asset)
@@ -84,3 +88,118 @@ def asset_form(request, pk=0):
         context = {"asset": asset, "form": form, "ptitle": "Asset: %s" % asset.name} #, "can_edit": can_edit
         return render(request, "car/asset_form.html", context)
 
+
+#==============================================================================
+def control_list(request):
+    '''
+    Display list of controls specific for the user, who requested
+        input: request
+        output: rendered HTML page
+    '''
+    control_list = Control.objects.filter(owner__users=request.user).order_by("control_label")
+    context = {"control_list": control_list, "ptitle": "Your controls"}
+    return render(request, "car/control_list.html", context)
+
+
+#==============================================================================
+def control_edit(request, pk=0):
+    '''
+    View/edit one control by ID/pk or create new with pk=0
+        input: request, primary_key
+        output: rendered HTML page
+    '''
+    if pk == 0:
+        control = Control()
+        #ownermembership__is_primary=True,
+        control.owner = Owner.objects.filter(
+            ownermembership__user=request.user,
+            ).first()
+    else:
+        control = get_object_or_404(Control, pk=pk)
+
+    if request.method == 'POST':
+        form = ControlForm(request.POST, instance=control, user=request.user)
+        if form.is_valid():
+            control.save(user=request.user)  # Saves to the Control model
+            return HttpResponseRedirect( f"/car/control/", preserve_request=False)
+    else:
+        form = ControlForm(instance=control, user=request.user)
+        context = {"control": control, "form": form}
+        return render(request, "car/control_edit.html", context)
+
+
+#==============================================================================
+def control_history(request, pk):
+    '''
+    View history of one control by ID/pk
+        input: request, primary_key
+        output: rendered HTML page
+    '''
+    control = get_object_or_404(Control, pk=pk)
+    
+    records = list(
+        control.history
+        .select_related("history_user")
+        .order_by("-history_date")
+    )
+
+    history_rows = []
+
+    for index, record in enumerate(records):
+
+        changes = []
+
+        if index + 1 < len(records):
+            previous = records[index + 1]
+
+            delta = record.diff_against(previous)
+            #print("DEBUG: delta|",delta)
+
+            changes = delta.changes
+
+        history_rows.append({
+            "record": record,
+            "changes": changes,
+        })
+
+    return render(
+        request,
+        "car/control_history.html",
+        {
+            "control": control,
+            "history_rows": history_rows,
+        },
+    )
+
+
+#==============================================================================
+def control_delete(request, pk):
+    '''
+    Display confirmation modal to delete a control
+        input: request, primary_key
+        output: rendered HTML page
+    '''
+    control = get_object_or_404(Control, pk=pk)
+    #control = Control.objects.annotate(
+    #    activity_count=Count('activity')
+    #    ).get(id=pk)
+    return render(request, "car/control_delete.html", {"control": control})
+    #return HttpResponseRedirect( f"/car/control/", preserve_request=False)
+
+
+#==============================================================================
+@require_POST  # ensures it only deletes via POST (for safety)
+def control_delete_confirmed(request, pk):
+    '''
+    Delete a control and redirect to list of controls
+        input: request, audit_id
+        output: redirect to control list
+    '''
+    control = get_object_or_404(Control, pk=pk)
+    control.delete()
+    return redirect('control_list')  
+
+
+
+
+    

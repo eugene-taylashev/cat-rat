@@ -57,3 +57,121 @@ class AssetForm(forms.ModelForm):
                 pk=self.instance.pk
             )
 
+#==============================================================================
+class ControlForm(forms.ModelForm):
+
+    class Meta:
+        model = Control
+
+        fields = [
+            "control_label",
+            "title",
+            "description",
+            "sec_function",
+            "asset",
+            "owner",
+            "status",
+            "documentation_url",
+        ]
+
+        widgets = {
+            "control_label": forms.TextInput(
+                attrs={
+                    "class": "input",
+                    "placeholder": "e.g. IAM-002",
+                }
+            ),
+
+            "title": forms.TextInput(
+                attrs={
+                    "class": "input",
+                    "placeholder": "Control title",
+                }
+            ),
+
+            "description": forms.Textarea(
+                attrs={
+                    "class": "textarea",
+                    "rows": 6,
+                    "placeholder": "Describe the control activity...",
+                }
+            ),
+
+            "sec_function": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "asset": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "owner": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "status": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "documentation_url": forms.URLInput(
+                attrs={
+                    "class": "input",
+                    "placeholder": "https://...",
+                }
+            ),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # ------------------------------------------------------------
+        # Owner choices
+        #
+        # Show only Owners to which the current user belongs.
+        # ------------------------------------------------------------
+        if user is not None:
+            self.fields["owner"].queryset = Owner.objects.filter(
+                ownermembership__user=user
+            ).distinct()
+
+        # ------------------------------------------------------------
+        # Asset choices
+        #
+        # Optional: restrict assets to assets owned by the user's
+        # Owners. Remove this section if users should see all assets.
+        # ------------------------------------------------------------
+        #if user is not None:
+        #    self.fields["asset"].queryset = Asset.objects.filter(
+        #        ownermembership__user=user
+        #    ).distinct()
+
+        # ------------------------------------------------------------
+        # Make the empty option more meaningful
+        # ------------------------------------------------------------
+        self.fields["asset"].empty_label = "— No asset —"
+        self.fields["owner"].empty_label = "— No owner —"
+
+        # ------------------------------------------------------------
+        # Help text
+        # ------------------------------------------------------------
+        self.fields["control_label"].help_text = (
+            "Unique control reference, e.g. IAM-002 or BCP-003."
+        )
+
+        self.fields["title"].help_text = (
+            "Short name describing the control activity."
+        )
+
+        self.fields["description"].help_text = (
+            "Describe what the control does and what it is intended "
+            "to accomplish."
+        )
+

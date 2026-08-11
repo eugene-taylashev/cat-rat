@@ -5,5 +5,5 @@ from django.contrib.auth.decorators import login_required   # type: ignore
 @login_required
 def app_index(request):
     #HttpResponse("<html><body><h1>This is Risk Assessment Tool</h1></body></html>")
-    return render(request, "car/index.html")
+    return render(request, "car/main.html")
     

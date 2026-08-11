@@ -1,0 +1,232 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<div class="container">
+
+    <!-- ========================================================= -->
+    <!-- Page Header                                                -->
+    <!-- ========================================================= -->
+
+    <div class="level mb-5">
+
+        <div class="level-left">
+            <div>
+                <h1 class="title">
+                    Control History
+                </h1>
+
+                <p class="subtitle">
+                    <strong>{{ control.control_label }}</strong>
+                    {% if control.title %}
+                        — {{ control.title }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="level-right">
+
+            <div class="buttons">
+
+                <a
+                    href="{% url 'control_edit' control.pk %}"
+                    class="button is-primary"
+                >
+                    Edit Control
+                </a>
+
+                <a
+                    href="{% url 'control_list' %}"
+                    class="button is-light"
+                >
+                    Back to Controls
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- History                                                    -->
+    <!-- ========================================================= -->
+
+    {% if history_rows %}
+
+        {% for row in history_rows %}
+
+            {% with record=row.record changes=row.changes %}
+
+                <div class="box">
+				  <div class="grid is-mobile">
+				    <div class="cell">
+					  <label class="label has-text-grey">Revision</label> <p><strong>{{ record.history_date|date:"Y-m-d H:i:s" }}</strong></p>
+					</div>
+				    <div class="cell">
+					  <label class="label has-text-grey">Changed by</label> <p><strong>
+
+                            {% if record.history_user %}
+
+                                {{ record.history_user.get_username }}
+
+                            {% else %}
+
+                                <span class="has-text-grey">
+                                    Admin
+                                </span>
+
+                            {% endif %}
+					  </strong></p>
+					</div>
+
+                        <div class="level-right">
+
+                            {% if record.history_type == "+" %}
+
+                                <span class="tag is-success is-medium">
+                                    Created
+                                </span>
+
+                            {% elif record.history_type == "~" %}
+
+                                <span class="tag is-info is-medium">
+                                    Updated
+                                </span>
+
+                            {% elif record.history_type == "-" %}
+
+                                <span class="tag is-danger is-medium">
+                                    Deleted
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+                    <!-- Change reason -->
+
+                    {% if record.history_change_reason %}
+
+                        <div class="columns is-mobile mb-3">
+
+                            <div class="column is-2 has-text-grey">
+                                Reason
+                            </div>
+
+                            <div class="column">
+                                {{ record.history_change_reason }}
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- ================================================= -->
+                    <!-- Changed fields                                    -->
+                    <!-- ================================================= -->
+
+                    {% if changes %}
+
+                        <h2 class="title is-6 mt-4">
+                            Changes
+                        </h2>
+
+                        <div class="table-container">
+
+                            <table class="table is-fullwidth">
+
+                                <thead>
+
+                                    <tr>
+                                        <th style="width: 20%;">
+                                            Field
+                                        </th>
+
+                                        <th style="width: 40%;">
+                                            Previous value
+                                        </th>
+
+                                        <th style="width: 40%;">
+                                            New value
+                                        </th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    {% for change in changes %}
+
+                                        <tr>
+
+                                            <td>
+                                                <strong>
+                                                    {{ change.field }}
+                                                </strong>
+                                            </td>
+
+                                            <td>
+                                                {% if change.old %}
+                                                    <span class="has-text-danger-dark">
+                                                        {{ change.old }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="has-text-grey">
+                                                        —
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+
+                                            <td>
+                                                {% if change.new %}
+                                                    <span class="has-text-success-dark">
+                                                        {{ change.new }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="has-text-grey">
+                                                        —
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+
+                                        </tr>
+
+                                    {% endfor %}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="notification is-light">
+                            No field changes recorded for this revision.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            {% endwith %}
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="notification is-light">
+            No historical records found for this control.
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+

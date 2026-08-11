@@ -102,6 +102,7 @@ class OwnerMembership(models.Model):
 
 #==============================================================================
 class Asset(TimestampedModel):
+    '''List of key asset with hierarhical structure'''
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
 
@@ -122,3 +123,74 @@ class Asset(TimestampedModel):
     def __str__(self):
         return self.name
 
+#==============================================================================
+# Choices for Control assessment
+#==============================================================================
+class SecurityFunction(models.TextChoices):
+    IDENTIFY = "IDENTIFY", "Identify"
+    PROTECT = "PROTECT", "Protect"
+    DETECT = "DETECT", "Detect"
+    RESPOND = "RESPOND", "Respond"
+    RECOVER = "RECOVER", "Recover"
+    GOVERN = "GOVERN", "Govern"
+
+class ControlStatus(models.TextChoices):
+    PLANNING = "PLANNING", "Planning"
+    ACTIVE = "ACTIVE", "Active"
+    RETIRED = "RETIRED", "Retired"
+
+class ImplementationLevel(models.IntegerChoices):
+    NONE = 0, "Not implemented"
+    PARTIAL = 1, "Partially implemented"
+    FULL = 3, "Fully implemented"
+    VALIDATED = 5, "Validated and tested regularly"
+
+class DocumentationLevel(models.IntegerChoices):
+    NONE = 0, "Not documented"
+    DRAFT = 1, "Draft exists"
+    REVIEWED = 2, "Reviewed internally"
+    APPROVED = 3, "Approved and maintained"
+
+class AutomationLevel(models.IntegerChoices):
+    MANUAL = 0, "Manual"
+    PARTIAL = 1, "Partially automated"
+    MOSTLY = 2, "Mostly automated"
+    FULL = 4, "Fully automated"
+
+class ReportingLevel(models.IntegerChoices):
+    NONE = 0, "Not reported"
+    AD_HOC = 1, "Informal / ad hoc reporting"
+    INTERNAL = 2, "Internal reporting"
+    BUSINESS = 3, "Regular reporting to business units"
+
+
+#==============================================================================
+class Control(TimestampedModel):
+    '''List of "controls", but in reality control activity '''
+    control_label = models.CharField(max_length=50, unique=True,
+        help_text="Control code/label for reference in documents. I.e. IAM-002, BCP-003"
+    )
+    title = models.CharField(max_length=200,blank=True, help_text="Control title (optional)")
+    description = models.TextField(help_text="Control description")
+
+    sec_function = models.CharField(max_length=10,
+        choices=SecurityFunction.choices,
+    )
+    asset = models.ForeignKey(Asset,related_name="controls",on_delete=models.PROTECT,blank=True,null=True) 
+    owner = models.ForeignKey(Owner,related_name="controls",on_delete=models.PROTECT,blank=True,null=True) 
+    status = models.CharField(max_length=10, choices=ControlStatus.choices, default=ControlStatus.ACTIVE)
+    documentation_url = models.URLField(blank=True, help_text="URL to external control documentation.")
+    history = HistoricalRecords()
+
+    #----------------------------
+    def __str__(self):
+        return self.description
+
+    #----------------------------
+    def clean(self):
+        super().clean()
+
+        if self.status == ControlStatus.ACTIVE and self.owner is None:
+            raise ValidationError({
+                "owner": "Active controls must have an owner."
+            })

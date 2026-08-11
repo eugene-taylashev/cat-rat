@@ -1,0 +1,314 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<div class="container">
+
+    <div class="level mb-5">
+
+        <div class="level-left">
+            <div>
+                <h1 class="title">
+                    Edit Control
+                </h1>
+
+                <p class="subtitle">
+                    {{ control.control_label }}
+                </p>
+            </div>
+        </div>
+
+		{% if control.pk %}
+			<div class="level-right">
+				<a
+					href="{% url 'control_history' control.pk %}"
+					class="button is-light"
+				>
+					View History
+				</a>
+			</div>
+		{% endif %}
+
+    </div>
+
+
+    <div class="box">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="notification is-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+
+            <!-- Control Label -->
+
+            <div class="field">
+
+                <label
+                    class="label"
+                    for="{{ form.control_label.id_for_label }}"
+                >
+                    Control Label
+                </label>
+
+                <div class="control">
+                    {{ form.control_label }}
+                </div>
+
+                {% for error in form.control_label.errors %}
+                    <p class="help is-danger">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+                {% if form.control_label.help_text %}
+                    <p class="help">
+                        {{ form.control_label.help_text }}
+                    </p>
+                {% endif %}
+
+            </div>
+
+
+            <!-- Title -->
+
+            <div class="field">
+
+                <label
+                    class="label"
+                    for="{{ form.title.id_for_label }}"
+                >
+                    Title
+                </label>
+
+                <div class="control">
+                    {{ form.title }}
+                </div>
+
+                {% for error in form.title.errors %}
+                    <p class="help is-danger">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <!-- Description -->
+
+            <div class="field">
+
+                <label
+                    class="label"
+                    for="{{ form.description.id_for_label }}"
+                >
+                    Description
+                </label>
+
+                <div class="control">
+                    {{ form.description }}
+                </div>
+
+                {% for error in form.description.errors %}
+                    <p class="help is-danger">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <div class="columns">
+
+                <!-- Security Function -->
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            Security Function
+                        </label>
+
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                {{ form.sec_function }}
+                            </div>
+                        </div>
+
+                        {% for error in form.sec_function.errors %}
+                            <p class="help is-danger">
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- Status -->
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            Status
+                        </label>
+
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                {{ form.status }}
+                            </div>
+                        </div>
+
+                        {% for error in form.status.errors %}
+                            <p class="help is-danger">
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="columns">
+
+                <!-- Asset -->
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            Asset
+                        </label>
+
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                {{ form.asset }}
+                            </div>
+                        </div>
+
+                        {% for error in form.asset.errors %}
+                            <p class="help is-danger">
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- Owner -->
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            Owner
+                        </label>
+
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                {{ form.owner }}
+                            </div>
+                        </div>
+
+                        {% for error in form.owner.errors %}
+                            <p class="help is-danger">
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Documentation URL -->
+
+            <div class="field">
+
+                <label class="label">
+                    Documentation URL
+                </label>
+
+                <div class="control">
+                    {{ form.documentation_url }}
+                </div>
+
+                {% for error in form.documentation_url.errors %}
+                    <p class="help is-danger">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+            <!-- Update info -->
+    <table class="table">
+      <tr class="thead">
+        <td>Record</td><td>When</td><td>By</td>
+      </tr>
+      <tr>
+        <td class="caption">Created</td><td>{{ contrl.created_at }}</td>
+        <td>{{ contrl.created_by|default:"admin" }}</td>
+      </tr>
+      <tr>
+        <td class="caption">Updated</td><td>{{ contrl.updated_at }}</td>
+        <td>{{ contrl.updated_by|default:"admin" }}</td>
+      </tr>
+    </table>
+
+
+            <!-- Buttons -->
+
+            <div class="field is-grouped mt-5">
+
+                <div class="control">
+
+                    <button
+                        type="submit"
+                        class="button is-primary"
+                    >
+                        Save Control
+                    </button>
+
+                </div>
+
+				{% if control.pk %}
+					<div class="control">
+
+						<a
+							href="{% url 'control_history' control.pk %}"
+							class="button is-light"
+						>
+							History
+						</a>
+			
+					</div>
+				{% endif %}
+				<div class="control"><a href="{% url 'control_edit' 0 %}"><span title="Add new Control" class="button is-light">Add Control +</span></a></div>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

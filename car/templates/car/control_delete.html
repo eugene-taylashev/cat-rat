@@ -1,0 +1,22 @@
+<!-- templates/partials/book_detail_modal.html -->
+<div class="modal is-active">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Confirm Deletion</p>
+      <button class="delete modal-close" aria-label="close"></button>
+    </header>
+
+    <section class="modal-card-body">
+      <p>If you click <strong>Yes</strong>, this control and associated records will be permanently deleted.</p>
+    </section>
+
+    <footer class="modal-card-foot">
+      <form method="post" action="{% url 'control_delete_confirmed' control.pk %}">
+        {% csrf_token %}
+        <button class="button is-danger" type="submit">Yes, Delete</button>
+      </form>
+      <button class="button is-primary modal-close">Cancel</button>
+    </footer>
+  </div>
+</div>

@@ -1,5 +1,5 @@
 ---
-Run Django: 		python manage.py runserver
+Run Django: 		python3 manage.py runserver
 
 Run migration: 		python3 manage.py migrate
 Prepare migration: 	python3 manage.py makemigrations
