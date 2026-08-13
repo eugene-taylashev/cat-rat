@@ -12,23 +12,8 @@
                     Edit Control
                 </h1>
 
-                <p class="subtitle">
-                    {{ control.control_label }}
-                </p>
             </div>
         </div>
-
-		{% if control.pk %}
-			<div class="level-right">
-				<a
-					href="{% url 'control_history' control.pk %}"
-					class="button is-light"
-				>
-					View History
-				</a>
-			</div>
-		{% endif %}
-
     </div>
 
 
@@ -259,50 +244,49 @@
 
             </div>
 
-            <!-- Update info -->
-    <table class="table">
-      <tr class="thead">
-        <td>Record</td><td>When</td><td>By</td>
-      </tr>
-      <tr>
-        <td class="caption">Created</td><td>{{ contrl.created_at }}</td>
-        <td>{{ contrl.created_by|default:"admin" }}</td>
-      </tr>
-      <tr>
-        <td class="caption">Updated</td><td>{{ contrl.updated_at }}</td>
-        <td>{{ contrl.updated_by|default:"admin" }}</td>
-      </tr>
-    </table>
+            <!-- Record history  info -->
+            <table class="table">
+              <tr>
+				<td class="content is-small"><strong>Record created by</strong> {{ control.created_by|default:"admin" }}
+				  <strong>on</strong> {{ control.created_at }}</td>
+				<td class="content is-small"><strong>Updated by</strong> {{ control.updated_by|default:"admin" }}
+				  <strong>on</strong> {{ control.updated_at }}</td>
+			  </tr>
+			</table>
 
 
             <!-- Buttons -->
-
             <div class="field is-grouped mt-5">
 
                 <div class="control">
-
-                    <button
-                        type="submit"
-                        class="button is-primary"
-                    >
-                        Save Control
-                    </button>
-
+                    <button type="submit" class="button is-primary is-light">Save Control</button>
                 </div>
 
 				{% if control.pk %}
-					<div class="control">
-
-						<a
-							href="{% url 'control_history' control.pk %}"
-							class="button is-light"
-						>
-							History
+				    <div class="control">
+						<a href="{% url 'control_history' control.pk %}"
+							class="button is-light">
+							View History
 						</a>
-			
+				    </div>
+				{% endif %}
+
+				<div class="control">
+					<a href="{% url 'control_edit' 0 %}">
+					<span title="Add new Control" class="button is-warning is-light">Add Control +</span></a>
+				</div>
+
+				{% if control.pk %}
+					<div class="control">
+						<button 
+							class="button is-danger is-light"
+							hx-get="{% url 'control_delete' control.pk %}"
+							hx-target="#modal-container"
+							hx-trigger="click"
+							hx-swap="innerHTML"
+						>Delete -</button>
 					</div>
 				{% endif %}
-				<div class="control"><a href="{% url 'control_edit' 0 %}"><span title="Add new Control" class="button is-light">Add Control +</span></a></div>
             </div>
 
         </form>

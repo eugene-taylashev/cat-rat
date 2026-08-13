@@ -1,0 +1,29 @@
+<!-- Modal to confirm control and sub-records to be deleted -->
+<div class="modal is-active">
+  <!-- Modal background -->
+  <div class="modal-background" onclick="this.closest('.modal').remove()"></div>
+
+  <!-- Modal card -->
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Confirm Deletion</p>
+      <button class="delete modal-close" aria-label="close" onclick="this.closest('.modal').remove()"></button>
+    </header>
+
+    <section class="modal-card-body">
+      <div class="mb-4">
+	    If you click <strong>Yes</strong>, this Control and all associated records will be permanently deleted and cannot be recovered.
+        <p class="has-text-grey"><strong>Recommendation:</strong> To preserve records, change the Control status to "Retired" instead.</p>
+	  </div>
+    </section>
+
+	 <!-- Confirm -->
+    <footer class="modal-card-foot">
+      <form method="post" action="{% url 'control_delete_confirmed' control.pk %}">
+        {% csrf_token %}
+        <button class="button is-danger is-light" type="submit">Yes, Delete</button>
+        <button class="button is-primary is-light" onclick="this.closest('.modal').remove()">Cancel</button>
+      </form>
+    </footer>
+  </div>
+</div>

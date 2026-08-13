@@ -6,10 +6,14 @@ from django.urls import reverse_lazy        # type: ignore
 from django.shortcuts import render, Http404, redirect, get_object_or_404    # type: ignore
 from django.db.models import Count, Q       # type: ignore
 from django.contrib.auth.decorators import login_required   # type: ignore
+import logging
+
 
 
 from .models import *
 from .forms import *
+
+logger = logging.getLogger(__name__)
 
 @login_required
 #==============================================================================
@@ -58,6 +62,7 @@ def asset_list(request):
     asset_list = build_asset_tree(request.user)
     can_edit = can_edit_asset(request.user, asset_list[0]) if asset_list else False
     context = {"asset_list": asset_list, "ptitle": "Your assets", "can_edit": can_edit}
+    logger.debug("asset_list: accessing by %s", request.user)
     return render(request, "car/asset_list.html", context)
 
 
@@ -74,17 +79,20 @@ def asset_form(request, pk=0):
         asset.owner = Owner.objects.filter(
             ownermembership__user=request.user,
             ).first()
+        logger.debug("asset_form: creating new asset by %s", request.user)
     else:
         asset = get_object_or_404(Asset, pk=pk)
         #can_edit = can_edit_asset(request.user, asset)
 
     if request.method == 'POST':
         form = AssetForm(request.POST, instance=asset)
+        logger.debug("asset_form: updating asset pk=%s by %s", asset.pk, request.user)
         if form.is_valid():
             asset.save(user=request.user)  # Saves to the Asset model
             return HttpResponseRedirect( f"/car/asset/", preserve_request=False)
     else:
         form = AssetForm(instance=asset)
+        logger.debug("asset_form: accessing asset pk=%s by %s", asset.pk, request.user)
         context = {"asset": asset, "form": form, "ptitle": "Asset: %s" % asset.name} #, "can_edit": can_edit
         return render(request, "car/asset_form.html", context)
 
@@ -97,6 +105,7 @@ def control_list(request):
         output: rendered HTML page
     '''
     control_list = Control.objects.filter(owner__users=request.user).order_by("control_label")
+    logger.debug("control_list: accessing by %s", request.user)
     context = {"control_list": control_list, "ptitle": "Your controls"}
     return render(request, "car/control_list.html", context)
 
@@ -114,16 +123,19 @@ def control_edit(request, pk=0):
         control.owner = Owner.objects.filter(
             ownermembership__user=request.user,
             ).first()
+        logger.debug("control_edit: creating new control by %s", request.user)
     else:
         control = get_object_or_404(Control, pk=pk)
 
     if request.method == 'POST':
         form = ControlForm(request.POST, instance=control, user=request.user)
+        logger.debug("control_edit: updating control pk=%s by %s", control.pk, request.user)
         if form.is_valid():
             control.save(user=request.user)  # Saves to the Control model
             return HttpResponseRedirect( f"/car/control/", preserve_request=False)
     else:
         form = ControlForm(instance=control, user=request.user)
+        logger.debug("control_edit: accessing control pk=%s by %s", control.pk, request.user)
         context = {"control": control, "form": form}
         return render(request, "car/control_edit.html", context)
 
@@ -143,6 +155,7 @@ def control_history(request, pk):
         .order_by("-history_date")
     )
 
+    logger.debug("control_history: accessing control history pk=%s by %s", control.pk, request.user)
     history_rows = []
 
     for index, record in enumerate(records):
@@ -183,7 +196,7 @@ def control_delete(request, pk):
     #control = Control.objects.annotate(
     #    activity_count=Count('activity')
     #    ).get(id=pk)
-    return render(request, "car/control_delete.html", {"control": control})
+    return render(request, "car/parts/control_delite_modal.html", {"control": control})
     #return HttpResponseRedirect( f"/car/control/", preserve_request=False)
 
 
@@ -195,6 +208,11 @@ def control_delete_confirmed(request, pk):
         input: request, audit_id
         output: redirect to control list
     '''
+    if request.method != "POST":
+        return HttpResponse(
+            "Method Not Allowed",
+            status=405,
+        )
     control = get_object_or_404(Control, pk=pk)
     control.delete()
     return redirect('control_list')  

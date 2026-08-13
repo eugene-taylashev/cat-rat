@@ -11,7 +11,8 @@
           <tr>
             <th>Control</th>
             <th>Description
-              <div style="display: inline-block; float: right;"><a href="{% url 'control_edit' 0 %}"><span title="Add new Control" class="button is-primary">Add Control +</span></a></div>
+              <div style="display: inline-block; float: right;"><a href="{% url 'control_edit' 0 %}">
+			    <span title="Add new Control" class="button is-warning is-light">Add Control +</span></a></div>
             </th>
 			<th>Action</th>
           </tr>
@@ -24,8 +25,14 @@
             </td>
             <td>{{ contrl.description }}</td>
 			<td>
-				    <a href="{% url 'control_edit' contrl.pk %}"><span class="button is-small is-primary">Edit</span></a> | 
-					<a href="{% url 'control_delete' contrl.pk %}"><span class="button is-small is-danger">Delete</span></a> 
+				    <a href="{% url 'control_edit' contrl.pk %}"><span class="button is-small is-primary is-light">Edit</span></a> | 
+					<button 
+                        class="button is-danger is-small is-light"
+                        hx-get="{% url 'control_delete' contrl.id %}"
+                        hx-target="#modal-container"
+                        hx-trigger="click"
+                        hx-swap="innerHTML"
+                      >Delete</button>
 			</td>
           </tr>
         {% empty %}

@@ -96,19 +96,15 @@
         {% endfor %}
     </div>
 
-    <table class="table">
-      <tr class="thead">
-        <td>Record</td><td>When</td><td>By</td>
-      </tr>
-      <tr>
-        <td class="caption">Created</td><td>{{ asset.created_at }}</td>
-        <td>{{ asset.created_by|default:"admin" }}</td>
-      </tr>
-      <tr>
-        <td class="caption">Updated</td><td>{{ asset.updated_at }}</td>
-        <td>{{ asset.updated_by|default:"admin" }}</td>
-      </tr>
-    </table>
+            <!-- Record history  info -->
+            <table class="table">
+              <tr>
+				<td class="content is-small"><strong>Record created by</strong> {{ asset.created_by|default:"admin" }}
+				  <strong>on</strong> {{ asset.created_at }}</td>
+				<td class="content is-small"><strong>Updated by</strong> {{ asset.updated_by|default:"admin" }}
+				  <strong>on</strong> {{ asset.updated_at }}</td>
+			  </tr>
+			</table>
 
     <div class="field is-grouped mt-5">
         <div class="control">
