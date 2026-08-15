@@ -11,7 +11,7 @@
           <tr>
             <th>Asset</th>
             <th>Description
-              <div style="float: right;"><a href="{% url 'asset_form' 0 %}"><span title="Add new Asset" class="button is-primary">Add Asset +</span></a></div>
+              <div style="float: right;"><a href="{% url 'asset_edit' 0 %}"><span title="Add new Asset" class="button is-primary">Add Asset +</span></a></div>
             </th>
           </tr>
         </thead>
@@ -19,7 +19,7 @@
           <tr>
         {% for ass in asset_list %}
             <td style="padding-left: {{ ass.indent }}px;">
-                <a href="{% url 'asset_form' ass.pk %}">{{ ass.name }}</a>
+                <a href="{% url 'asset_edit' ass.pk %}">{{ ass.name }}</a>
             </td>
             <td>{{ ass.description }}</td>
           </tr><tr>

@@ -5,8 +5,7 @@ from . import views
 urlpatterns = [
     path("", views.main, name="main"),
     path("asset/", views.asset_list, name="asset_list"),
-    path("asset/<int:pk>/", views.asset_form, name="asset_form"),
-    #path("asset/<int:pk>/edit", views.asset_edit, name="asset_edit"),
+    path("asset/<int:pk>/", views.asset_edit, name="asset_edit"),
     #path("asset/<int:pk>/delete/", views.asset_delete, name="asset_delete"),
     #path("asset/<int:pk>/history/", views.asset_history, name="asset_history"),
 

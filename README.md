@@ -13,6 +13,7 @@ Auditor - review controls and evidence, perform audit steps
 
 ### Initial steps
 1. Install record change history application: 	pip install django-simple-history
+2. Install additional modules: 					pip install python-dateutil
 3. Create project: 			django-admin startproject app cat-rat
 4. Create application: 		python manage.py startapp car
 5. Test functionality: 		python manage.py runserver

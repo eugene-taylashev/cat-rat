@@ -67,7 +67,7 @@ def asset_list(request):
 
 
 #==============================================================================
-def asset_form(request, pk=0):
+def asset_edit(request, pk=0):
     '''
     View/edit one asset by ID/pk or create new with pk=0
         input: request, primary_key
@@ -79,22 +79,22 @@ def asset_form(request, pk=0):
         asset.owner = Owner.objects.filter(
             ownermembership__user=request.user,
             ).first()
-        logger.debug("asset_form: creating new asset by %s", request.user)
+        logger.debug("asset_edit: creating new asset by %s", request.user)
     else:
         asset = get_object_or_404(Asset, pk=pk)
         #can_edit = can_edit_asset(request.user, asset)
 
     if request.method == 'POST':
         form = AssetForm(request.POST, instance=asset)
-        logger.debug("asset_form: updating asset pk=%s by %s", asset.pk, request.user)
+        logger.debug("asset_edit: updating asset pk=%s by %s", asset.pk, request.user)
         if form.is_valid():
             asset.save(user=request.user)  # Saves to the Asset model
             return HttpResponseRedirect( f"/car/asset/", preserve_request=False)
     else:
         form = AssetForm(instance=asset)
-        logger.debug("asset_form: accessing asset pk=%s by %s", asset.pk, request.user)
+        logger.debug("asset_edit: accessing asset pk=%s by %s", asset.pk, request.user)
         context = {"asset": asset, "form": form, "ptitle": "Asset: %s" % asset.name} #, "can_edit": can_edit
-        return render(request, "car/asset_form.html", context)
+        return render(request, "car/asset_edit.html", context)
 
 
 #==============================================================================

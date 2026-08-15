@@ -4,7 +4,7 @@
 
     <div class="container">
       <h1 class="title" id="asset_title">Your Asset</h1>
-	  		<div style="display: inline-block; float: right;"><a href="{% url 'asset_form' 0 %}"><span title="Add new Asset" class="button is-primary">Add Asset +</span></a></div>
+	  		<div style="display: inline-block; float: right;"><a href="{% url 'asset_edit' 0 %}"><span title="Add new Asset" class="button is-primary">Add Asset +</span></a></div>
 
       <script>document.title = "{{ ptitle }}";
         let elm = document.getElementById("asset_title");
