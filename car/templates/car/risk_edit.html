@@ -1,0 +1,435 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<div class="container">
+
+    {% if is_new %}
+        <h1 class="title">New Risk</h1>
+    {% else %}
+        <h1 class="title">
+            Edit Risk: {{ risk.risk_code }}
+        </h1>
+    {% endif %}
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+
+        <!-- ================================================= -->
+        <!-- Risk Identification -->
+        <!-- ================================================= -->
+
+        <div class="box">
+
+            <h2 class="subtitle">
+                Risk Identification
+            </h2>
+
+            <div class="columns">
+
+                <div class="column is-4">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.risk_code.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.risk_code }}
+                        </div>
+
+                        {% for error in form.risk_code.errors %}
+                            <p class="help is-danger">
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="column is-4">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.asset.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.asset }}
+                        </div>
+
+                        {% for error in form.asset.errors %}
+                            <p class="help is-danger">
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="column is-4">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.owner.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.owner }}
+                        </div>
+
+                        {% for error in form.owner.errors %}
+                            <p class="help is-danger">
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="field">
+
+                <label class="label">
+                    {{ form.scenario.label }}
+                </label>
+
+                <div class="control">
+                    {{ form.scenario }}
+                </div>
+
+                {% if form.scenario.help_text %}
+                    <p class="help">
+                        {{ form.scenario.help_text }}
+                    </p>
+                {% endif %}
+
+                {% for error in form.scenario.errors %}
+                    <p class="help is-danger">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <div class="field">
+
+                <label class="label">
+                    {{ form.status.label }}
+                </label>
+
+                <div class="control">
+                    {{ form.status }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- Inherent Risk -->
+        <!-- ================================================= -->
+
+        <div class="box">
+
+            <h2 class="subtitle">
+                Inherent Risk
+            </h2>
+
+            <div class="columns">
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.inherent_likelihood.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.inherent_likelihood }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.inherent_impact.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.inherent_impact }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            Assessment Date
+                        </label>
+
+                        <div class="control">
+                            {{ form.inherent_assessed_at }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {% if risk.inherent_score %}
+
+                <div class="notification is-light">
+
+                    <strong>Calculated Score:</strong>
+                    {{ risk.inherent_score }}
+
+                    &nbsp;&nbsp;
+
+                    <strong>Risk Level:</strong>
+                    {{ risk.get_inherent_level_display }}
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- Controls / Treatment -->
+        <!-- ================================================= -->
+
+        <div class="box">
+
+            <h2 class="subtitle">
+                Controls and Treatment
+            </h2>
+
+            <div class="field">
+
+                <label class="label">
+                    {{ form.controls.label }}
+                </label>
+
+                <div class="control">
+                    {{ form.controls }}
+                </div>
+
+                {% if form.controls.help_text %}
+                    <p class="help">
+                        {{ form.controls.help_text }}
+                    </p>
+                {% endif %}
+
+                {% for error in form.controls.errors %}
+                    <p class="help is-danger">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <div class="field">
+
+                <label class="label">
+                    {{ form.treatment_option.label }}
+                </label>
+
+                <div class="control">
+                    {{ form.treatment_option }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- Residual Risk -->
+        <!-- ================================================= -->
+
+        <div class="box">
+
+            <h2 class="subtitle">
+                Residual Risk
+            </h2>
+
+            <div class="columns">
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.residual_likelihood.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.residual_likelihood }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.residual_impact.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.residual_impact }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            Assessment Date
+                        </label>
+
+                        <div class="control">
+                            {{ form.residual_assessed_at }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {% if risk.residual_score %}
+
+                <div class="notification is-light">
+
+                    <strong>Calculated Score:</strong>
+                    {{ risk.residual_score }}
+
+                    &nbsp;&nbsp;
+
+                    <strong>Risk Level:</strong>
+                    {{ risk.get_residual_level_display }}
+
+                </div>
+
+            {% endif %}
+
+
+            <div class="field">
+
+                <label class="label">
+                    {{ form.next_review_date.label }}
+                </label>
+
+                <div class="control">
+                    {{ form.next_review_date }}
+                </div>
+
+                {% if form.next_review_date.help_text %}
+                    <p class="help">
+                        {{ form.next_review_date.help_text }}
+                    </p>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- Form-level errors -->
+        <!-- ================================================= -->
+
+        {% if form.non_field_errors %}
+
+            <div class="notification is-danger">
+
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- ================================================= -->
+        <!-- Buttons -->
+        <!-- ================================================= -->
+
+        <div class="field is-grouped">
+
+            <div class="control">
+
+                <button
+                    type="submit"
+                    class="button is-primary">
+
+                    Save Risk
+
+                </button>
+
+            </div>
+
+
+            <div class="control">
+
+                <a
+                    href="{% url 'risk_list' %}"
+                    class="button is-light">
+
+                    Cancel
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

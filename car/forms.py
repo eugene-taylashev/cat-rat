@@ -248,3 +248,193 @@ class ControlForm(forms.ModelForm):
             "to accomplish."
         )
 
+
+#==============================================================================
+class RiskForm(forms.ModelForm):
+
+    class Meta:
+        model = Risk
+
+        fields = [
+            "risk_code",
+            "scenario",
+            "asset",
+            "owner",
+            "status",
+
+            # Inherent risk
+            "inherent_likelihood",
+            "inherent_impact",
+            "inherent_assessed_at",
+
+            # Controls / treatment
+            "controls",
+            "treatment_option",
+
+            # Residual risk
+            "residual_likelihood",
+            "residual_impact",
+            "residual_assessed_at",
+            "next_review_date",
+        ]
+
+        widgets = {
+
+            "risk_code": forms.TextInput(
+                attrs={
+                    "class": "input",
+                    "placeholder": "RISK-001",
+                }
+            ),
+
+            "scenario": forms.Textarea(
+                attrs={
+                    "class": "textarea",
+                    "rows": 5,
+                    "placeholder": (
+                        "Describe the risk scenario "
+                        "(cause → event → consequence)"
+                    ),
+                }
+            ),
+
+            "asset": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "owner": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "status": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "inherent_likelihood": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "inherent_impact": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "inherent_assessed_at": forms.DateTimeInput(
+                attrs={
+                    "class": "input",
+                    "type": "datetime-local",
+                }
+            ),
+
+            "controls": forms.SelectMultiple(
+                attrs={
+                    "class": "select",
+                    "size": 8,
+                }
+            ),
+
+            "treatment_option": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "residual_likelihood": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "residual_impact": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "residual_assessed_at": forms.DateTimeInput(
+                attrs={
+                    "class": "input",
+                    "type": "datetime-local",
+                }
+            ),
+
+            "next_review_date": forms.DateInput(
+                attrs={
+                    "class": "input",
+                    "type": "date",
+                }
+            ),
+        }
+
+        labels = {
+            "risk_code": "Risk Code",
+            "scenario": "Risk Scenario",
+            "asset": "Related Asset",
+            "owner": "Risk Owner",
+            "status": "Status",
+
+            "inherent_likelihood": "Likelihood",
+            "inherent_impact": "Impact",
+            "inherent_assessed_at": "Assessment Date",
+
+            "controls": "Compensating Controls",
+            "treatment_option": "Treatment Option",
+
+            "residual_likelihood": "Likelihood",
+            "residual_impact": "Impact",
+            "residual_assessed_at": "Assessment Date",
+            "next_review_date": "Next Review",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["asset"].queryset = (
+            Asset.objects
+            .filter(is_active=True)
+            .order_by("name")
+        )
+
+        self.fields["owner"].queryset = (
+            Owner.objects
+            .order_by("name")
+        )
+
+        self.fields["controls"].queryset = (
+            Control.objects
+            .filter(status=ControlStatus.ACTIVE)
+            .order_by("control_label")
+        )
+
+    def clean(self):
+        super().clean()
+
+        if self.cleaned_data.get("status") in [
+            RiskStatus.ASSESSED,
+            RiskStatus.TREATMENT_PLANNED,
+            RiskStatus.TREATMENT_IN_PROGRESS,
+            RiskStatus.TREATED,
+            RiskStatus.REVIEWED,
+            RiskStatus.ACCEPTED,
+            RiskStatus.CLOSED,
+        ]:
+            if not self.cleaned_data.get("inherent_likelihood"):
+                self.add_error(
+                    "inherent_likelihood",
+                    "Likelihood is required for an assessed risk."
+                )
+
+            if not self.cleaned_data.get("inherent_impact"):
+                self.add_error(
+                    "inherent_impact",
+                    "Impact is required for an assessed risk."
+                )

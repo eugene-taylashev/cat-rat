@@ -301,7 +301,7 @@ def control_delete(request, pk):
 def control_delete_confirmed(request, pk):
     '''
     Delete a control and redirect to list of controls
-        input: request, audit_id
+        input: request, primary_key
         output: redirect to control list
     '''
     if request.method != "POST":
@@ -314,6 +314,100 @@ def control_delete_confirmed(request, pk):
     return redirect('control_list')  
 
 
+#==============================================================================
+@login_required
+def risk_list(request):
+    '''
+    Display list of risks specific for the user, who requested
+        input: request
+        output: rendered HTML page
+    '''
+    risk_list = Risk.objects.filter(owner__users=request.user).order_by("risk_code")
+    logger.debug("risk_list: accessing by %s", request.user)
+    context = {"risk_list": risk_list, "ptitle": "Your risks"}
+    return render(request, "car/risk_list.html", context)
+
+
+#==============================================================================
+def risk_edit(request, pk=0):
+
+    is_new = pk == 0
+
+    if is_new:
+        risk = Risk()
+    else:
+        risk = get_object_or_404(
+            Risk,
+            pk=pk
+        )
+
+    if request.method == "POST":
+
+        form = RiskForm(
+            request.POST,
+            instance=risk
+        )
+
+        if form.is_valid():
+
+            with transaction.atomic():
+
+                risk = form.save(
+                    commit=False
+                )
+
+                # Our TimestampedModel
+                risk.save(
+                    user=request.user
+                )
+
+                # Important because controls is ManyToMany
+                form.save_m2m()
+
+            messages.success(
+                request,
+                "Risk created successfully."
+                if is_new
+                else "Risk updated successfully."
+            )
+
+            return redirect(
+                "risk_edit",
+                pk=risk.pk
+            )
+
+    else:
+
+        form = RiskForm(
+            instance=risk
+        )
+
+    return render(
+        request,
+        "car/risk_edit.html",
+        {
+            "risk": risk,
+            "form": form,
+            "is_new": is_new,
+        }
+    )
+
+#==============================================================================
+@require_POST  # ensures it only deletes via POST (for safety)
+def risk_delete(request, pk):
+    '''
+    Delete a risk and redirect to list of risks
+        input: request, risk_id
+        output: redirect to risk list
+    '''
+    if request.method != "POST":
+        return HttpResponse(
+            "Method Not Allowed",
+            status=405,
+        )
+    risk = get_object_or_404(Risk, pk=pk)
+    risk.delete()
+    return redirect('risk_list')  
 
 
     

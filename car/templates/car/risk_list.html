@@ -1,0 +1,44 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<script>document.title = "{{ ptitle }}";</script>
+    <div class="container">
+      <h1 class="title">Your Risks</h1>
+
+      <table class="table is-striped is-hoverable is-fullwidth">
+        <thead>
+          <tr>
+            <th>Risk</th>
+            <th>Scenario
+              <div style="display:inline-block; float:right;"><a href="{% url 'risk_edit' 0 %}">
+			    <span title="Add new Risk" class="button is-warning is-light">Add Risk +</span></a></div>
+            </th>
+			      <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for risk in risk_list %}
+          <tr>
+            <td>
+               {{ risk.risk_code }}
+            </td>
+            <td>{{ risk.scenario }}</td>
+			<td>
+				    <a href="{% url 'risk_edit' risk.pk %}"><span class="button is-small is-primary is-light">Edit</span></a> | 
+					<button 
+                        class="button is-danger is-small is-light"
+                        hx-get="{% url 'risk_delete' risk.id %}"
+                        hx-target="#modal-container"
+                        hx-trigger="click"
+                        hx-swap="innerHTML"
+                      >Delete</button>
+			</td>
+          </tr>
+        {% empty %}
+            <tr><td>No Risks are assigned to you.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+{% endblock %}

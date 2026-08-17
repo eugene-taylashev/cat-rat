@@ -330,7 +330,7 @@ class Action(TimestampedModel):
         self.save(user=user)
     
 #==============================================================================
-# Choices for Risk assessment, ISO 27005 specific
+# Choices for Risk assessment, ISO 27005 lifecycle
 #==============================================================================
 class RiskStatus(models.TextChoices):
     IDENTIFIED = "identified", "Identified"
@@ -382,7 +382,7 @@ class Risk(TimestampedModel):
     The central risk entity — links assets, threat, vulnerability and holds assessment and treatment info.
     Aligns to ISO 27005 risk definition and lifecycle.
     """
-    risk_code = models.CharField( max_length=50, unique=True, help_text="human-readable risk identifier",)
+    risk_code = models.CharField( max_length=50, unique=True, help_text="human-readable risk identifier",) #i.e. RISK-002
     scenario = models.TextField(help_text="Concise risk statement / scenario (cause -> event -> consequence)")
     asset = models.ForeignKey(Asset,related_name="risks",on_delete=models.PROTECT,blank=True,null=True) 
     owner = models.ForeignKey(Owner,related_name="risks",on_delete=models.PROTECT,blank=True,null=True) 
