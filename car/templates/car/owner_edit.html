@@ -1,0 +1,146 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<script>document.title = "{{ ptitle }}";</script>
+<div class="container">
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <!-- Owner information -->
+        <div class="box">
+
+            {% if is_new %}
+                <h2 class="subtitle">New Owner</h2>
+            {% else %}
+                <h2 class="subtitle">Edit Owner</h2>
+            {% endif %}
+
+            {% for field in form %}
+
+                <div class="field">
+
+                    <label class="label"
+                           for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    <div class="control">
+                        {{ field }}
+                    </div>
+
+                    {% if field.help_text %}
+                        <p class="help">
+                            {{ field.help_text }}
+                        </p>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <p class="help is-danger">
+                            {{ error }}
+                        </p>
+                    {% endfor %}
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- Users -->
+        <div class="box">
+
+            <h2 class="subtitle">
+                Owner Members
+            </h2>
+
+            {{ formset.management_form }}
+
+            <table class="table is-fullwidth is-hoverable">
+
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Primary</th>
+                        <th>Remove</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for member_form in formset %}
+
+                        <tr>
+
+                            <td>
+                                {{ member_form.user }}
+
+                                {% for error in member_form.user.errors %}
+                                    <p class="help is-danger">
+                                        {{ error }}
+                                    </p>
+                                {% endfor %}
+                            </td>
+
+                            <td>
+                                {{ member_form.role }}
+                            </td>
+
+                            <td>
+                                {{ member_form.is_primary }}
+                            </td>
+
+                            <td>
+                                {% if member_form.instance.pk %}
+                                    {{ member_form.DELETE }}
+                                {% endif %}
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- Record history  info -->
+            <table class="table">
+              <tr>
+				<td class="content is-small"><strong>Record created by</strong> {{ control.created_by|default:"admin" }}
+				  <strong>on</strong> {{ control.created_at|default:"unknown" }}</td>
+				<td class="content is-small"><strong>Updated by</strong> {{ control.updated_by|default:"admin" }}
+				  <strong>on</strong> {{ control.updated_at|default:"unknown" }}</td>
+			  </tr>
+			</table>
+
+        <!-- Buttons -->
+        <div class="field is-grouped">
+
+            <div class="control">
+                <button
+                    type="submit"
+                    class="button is-primary">
+                    Save
+                </button>
+            </div>
+
+			<div class="control">
+				<a href="{% url 'owner_edit' 0 %}">
+				<span title="Add new Owner" class="button is-warning is-light">Add Owner +</span></a>
+			</div>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+{% endblock %}

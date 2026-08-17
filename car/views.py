@@ -1,13 +1,11 @@
 from django.http import HttpResponseRedirect, HttpResponse              # type: ignore
 from django.views.decorators.http import require_POST              # type: ignore
-from django.views import View            # type: ignore
-from django.views.generic import DeleteView                 # type: ignore
-from django.urls import reverse_lazy        # type: ignore
 from django.shortcuts import render, Http404, redirect, get_object_or_404    # type: ignore
 from django.db.models import Count, Q       # type: ignore
 from django.contrib.auth.decorators import login_required   # type: ignore
+from django.contrib import messages
+from django.db import transaction
 import logging
-
 
 
 from .models import *
@@ -18,13 +16,109 @@ logger = logging.getLogger(__name__)
 @login_required
 #==============================================================================
 def main(request):
+    '''
+    Placeholder for the main page
+        input: request
+        output: rendered HTML page
+    '''
     return render(request, "car/main.html")
+
+
+
+
+#==============================================================================
+def owner_list(request):
+    '''
+    Display list of owners specific for the user, who requested
+        input: request
+        output: rendered HTML page
+    '''
+    owner_list = Owner.objects.all()
+    context = {"owner_list": owner_list, "ptitle": "Your owners"}
+    logger.debug("owner_list: accessing by %s", request.user)
+    return render(request, "car/owner_list.html", context)
+
+
+
+#==============================================================================
+def owner_edit(request, pk=0):
+    '''
+    View/edit one owner by ID/pk or create new with pk=0
+        input: request, primary_key
+        output: rendered HTML page
+    '''
+
+    is_new = pk == 0
+    # ---------------------------------------------------------
+    # CREATE new Owner
+    # ---------------------------------------------------------
+    if is_new:
+        owner = Owner()
+        logger.debug("owner_edit: creating new owner by %s", request.user)
+
+    # ---------------------------------------------------------
+    # EDIT existing Owner
+    # ---------------------------------------------------------
+    else:
+        owner = get_object_or_404(Owner, pk=pk)
+
+    # ---------------------------------------------------------
+    # POST
+    # ---------------------------------------------------------
+    if request.method == "POST":
+        form = OwnerForm(request.POST, instance=owner)
+        # For both new and existing Owner
+        formset = OwnerMembershipFormSet(request.POST,instance=owner)
+        logger.debug("owner_edit: updating owner pk=%s by %s", owner.pk, request.user)
+
+        if form.is_valid() and formset.is_valid():
+
+            with transaction.atomic():
+
+                # Save Owner first.
+                # This creates the PK if this is a new Owner.
+                owner = form.save(commit=False)
+
+                owner.save(user=request.user)
+
+                # Now owner.pk exists.
+                formset.instance = owner
+
+                # Save OwnerMembership records.
+                formset.save()
+
+            messages.success(
+                request,
+                "Owner saved successfully."
+            )
+
+            return redirect("owner_edit",pk=owner.pk)
+
+        else:
+            # Validation failed.
+            # Do not redirect or recreate the forms.
+            # Keep the submitted forms so their errors are displayed.
+            pass
+
+    # ---------------------------------------------------------
+    # GET
+    # ---------------------------------------------------------
+    else:
+
+        form = OwnerForm(instance=owner)
+        formset = OwnerMembershipFormSet(instance=owner)
+        logger.debug("owner_edit: accessing owner pk=%s by %s", owner.pk, request.user)
+
+
+    context = {"owner": owner, "form": form, "formset": formset, "is_new": is_new, "ptitle": "Owner: %s" % owner.name}
+    return render(request, "car/owner_edit.html", context)
 
 
 #==============================================================================
 def build_asset_tree(user,parent=None, level=0):
     '''
-    prepare list of Assets in hierarchical order    '''
+    prepare list of Assets in hierarchical order    
+    '''
     rows = []
 
     assets = Asset.objects.filter(owner__users=user,parent=parent).order_by("name")
@@ -93,8 +187,9 @@ def asset_edit(request, pk=0):
     else:
         form = AssetForm(instance=asset)
         logger.debug("asset_edit: accessing asset pk=%s by %s", asset.pk, request.user)
-        context = {"asset": asset, "form": form, "ptitle": "Asset: %s" % asset.name} #, "can_edit": can_edit
-        return render(request, "car/asset_edit.html", context)
+
+    context = {"asset": asset, "form": form, "ptitle": "Asset: %s" % asset.name} #, "can_edit": can_edit
+    return render(request, "car/asset_edit.html", context)
 
 
 #==============================================================================
@@ -136,8 +231,9 @@ def control_edit(request, pk=0):
     else:
         form = ControlForm(instance=control, user=request.user)
         logger.debug("control_edit: accessing control pk=%s by %s", control.pk, request.user)
-        context = {"control": control, "form": form}
-        return render(request, "car/control_edit.html", context)
+
+    context = {"control": control, "form": form}
+    return render(request, "car/control_edit.html", context)
 
 
 #==============================================================================

@@ -1,5 +1,78 @@
 from django import forms #type: ignore
+from django.forms import inlineformset_factory  
+
 from .models import *
+
+#==============================================================================
+class OwnerForm(forms.ModelForm):
+    class Meta:
+        model = Owner
+        fields = [
+            "name",
+            "contact_prim",
+        ]
+
+        widgets = {
+            "name": forms.TextInput(
+                attrs={
+                    "class": "input",
+                }
+            ),
+
+            "contact_prim": forms.TextInput(
+                attrs={
+                    "class": "input",
+                }
+            ),
+        }
+
+        labels = {
+            "name": "Owner / Team Name",
+            "contact_prim": "Primary Contact",
+        }
+
+
+#==============================================================================
+class OwnerMembershipForm(forms.ModelForm):
+
+    class Meta:
+        model = OwnerMembership
+        fields = [
+            "user",
+            "role",
+            "is_primary",
+        ]
+
+        widgets = {
+            "user": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "role": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "is_primary": forms.CheckboxInput(
+                attrs={
+                    "class": "checkbox",
+                }
+            ),
+        }
+
+
+#==============================================================================
+OwnerMembershipFormSet = inlineformset_factory(
+    Owner,
+    OwnerMembership,
+    form=OwnerMembershipForm,
+    extra=1,
+    can_delete=True,
+)
+
 
 #==============================================================================
 class AssetForm(forms.ModelForm):

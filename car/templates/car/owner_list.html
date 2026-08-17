@@ -1,0 +1,33 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<script>document.title = "{{ ptitle }}";</script>
+    <div class="container">
+      <h1 class="title">Owners</h1>
+
+      <table class="table is-striped is-hoverable is-fullwidth">
+        <thead>
+          <tr>
+            <th>Team/Person</th>
+            <th>Primary Contact
+              <div style="float: right;"><a href="{% url 'owner_edit' 0 %}"><span title="Add new Owner" class="button is-primary">Add Owner +</span></a></div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+        {% for owner in owner_list %}
+            <td style="padding-left: {{ owner.indent }}px;">
+                <a href="{% url 'owner_edit' owner.pk %}">{{ owner.name }}</a>
+            </td>
+            <td>{{ owner.primary_contact }}</td>
+          </tr><tr>
+        {% empty %}
+            <td colspan="2">There are no owners yet.</td>
+        {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+{% endblock %}

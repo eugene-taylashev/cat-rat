@@ -99,10 +99,10 @@
             <!-- Record history  info -->
             <table class="table">
               <tr>
-				<td class="content is-small"><strong>Record created by</strong> {{ asset.created_by|default:"admin" }}
-				  <strong>on</strong> {{ asset.created_at }}</td>
-				<td class="content is-small"><strong>Updated by</strong> {{ asset.updated_by|default:"admin" }}
-				  <strong>on</strong> {{ asset.updated_at }}</td>
+				<td class="content is-small"><strong>Record created by</strong> {{ control.created_by|default:"admin" }}
+				  <strong>on</strong> {{ control.created_at|default:"unknown" }}</td>
+				<td class="content is-small"><strong>Updated by</strong> {{ control.updated_by|default:"admin" }}
+				  <strong>on</strong> {{ control.updated_at|default:"unknown" }}</td>
 			  </tr>
 			</table>
 
