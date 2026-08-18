@@ -1,0 +1,221 @@
+{% extends "car/base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    {% if is_new %}
+        <h1 class="title">New Action</h1>
+    {% else %}
+        <h1 class="title">
+            Edit Action: {{ action.action_code }}
+        </h1>
+    {% endif %}
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="notification is-danger">
+
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+
+            </div>
+        {% endif %}
+
+
+        <div class="box">
+
+            <h2 class="subtitle">
+                Action Information
+            </h2>
+
+
+            <div class="columns">
+
+                <div class="column is-4">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.action_code.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.action_code }}
+                        </div>
+
+                        {% for error in form.action_code.errors %}
+                            <p class="help is-danger">
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="column is-8">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.title.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.title }}
+                        </div>
+
+                        {% for error in form.title.errors %}
+                            <p class="help is-danger">
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="field">
+
+                <label class="label">
+                    {{ form.description.label }}
+                </label>
+
+                <div class="control">
+                    {{ form.description }}
+                </div>
+
+                {% for error in form.description.errors %}
+                    <p class="help is-danger">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+				<!-- Out form errors -->
+				{% if form.action_code.errors %}
+					{% for error in form.action_code.errors %}
+						<p class="help is-danger">
+							{{ error }}
+						</p>
+					{% endfor %}
+				{% endif %}
+            </div>
+
+
+            <div class="columns">
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.action_type.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.action_type }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.owner.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.owner }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.priority.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.priority }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="column">
+
+                    <div class="field">
+
+                        <label class="label">
+                            {{ form.due_date.label }}
+                        </label>
+
+                        <div class="control">
+                            {{ form.due_date }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="field is-grouped">
+
+            <div class="control">
+
+                <button
+                    type="submit"
+                    class="button is-primary">
+
+                    Save Action
+
+                </button>
+
+            </div>
+
+            <div class="control">
+
+                <a
+                    href="{% url 'action_list' %}"
+                    class="button is-light">
+
+                    Cancel
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

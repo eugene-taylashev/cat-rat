@@ -27,4 +27,13 @@ urlpatterns = [
     path("risk/", views.risk_list, name="risk_list"),
     path("risk/<int:pk>/edit/", views.risk_edit, name="risk_edit"),
     path("risk/<int:pk>/delete/", views.risk_delete, name="risk_delete"),
+
+    #-- manage actions/tasks
+    path("actions/", views.action_list, name="action_list"),
+    path("actions/<int:pk>/", views.action_detail, name="action_detail"),
+    path("actions/<int:pk>/edit/", views.action_edit, name="action_edit"),
+    path("actions/<int:pk>/start/", views.action_start, name="action_start"),
+    path("actions/<int:pk>/complete/", views.action_complete, name="action_complete"),
+    path("actions/<int:pk>/reopen/", views.action_reopen, name="action_reopen"),
+
 ]

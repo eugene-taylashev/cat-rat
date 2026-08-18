@@ -95,7 +95,7 @@
           <a class="navbar-item" href="{% url 'asset_list' %}">Assets</a>
           <a class="navbar-item" href="{% url 'control_list' %}">Controls</a>
           <a class="navbar-item" href="{% url 'risk_list' %}">Risks</a>
-          <a class="navbar-item" href="">Tasks</a>
+          <a class="navbar-item" href="{% url 'action_list' %}">Actions</a>
         </div>
 
         <!-- RIGHT side -->
@@ -115,6 +115,34 @@
     </nav>
 
     {% block content %}{% endblock %}
+
+	<!-- For messages -->
+	{% if messages %}
+		<div class="container mt-4">
+	
+        {% for message in messages %}
+
+            <div class="notification  is-light
+                {% if message.tags == 'success' %}is-success
+                {% elif message.tags == 'error' %}is-danger
+                {% elif message.tags == 'warning' %}is-warning
+                {% elif message.tags == 'info' %}is-info
+                {% else %}is-light
+                {% endif %}">
+
+				<button
+					class="delete"
+					onclick="this.parentElement.remove();">
+				</button>
+
+                {{ message }}
+
+            </div>
+
+        {% endfor %}
+
+		</div>
+	{% endif %}	
 
     <!-- Modal placeholder -->
     <div id="modal-container"></div>

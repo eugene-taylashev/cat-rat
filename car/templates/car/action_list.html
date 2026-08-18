@@ -1,0 +1,154 @@
+{% extends "car/base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="level">
+
+        <div class="level-left">
+
+            <h1 class="title">
+                Actions
+            </h1>
+
+        </div>
+
+        <div class="level-right">
+
+            <a
+                href="{% url 'action_edit' 0 %}"
+                class="button is-primary">
+
+                New Action
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table class="table is-fullwidth is-hoverable">
+
+            <thead>
+
+                <tr>
+                    <th>Code</th>
+                    <th>Action</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Due</th>
+                    <th></th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for action in actions %}
+
+                    <tr>
+
+                        <td>
+                            <a
+                                href="{% url 'action_detail' action.pk %}">
+
+                                {{ action.action_code }}
+
+                            </a>
+                        </td>
+
+
+                        <td>
+                            {{ action.title }}
+                        </td>
+
+
+                        <td>
+                            {{ action.get_action_type_display }}
+                        </td>
+
+
+                        <td>
+                            {{ action.owner }}
+                        </td>
+
+
+                        <td>
+                            {{ action.get_priority_display }}
+                        </td>
+
+
+                        <td>
+                            {{ action.get_status_display }}
+                        </td>
+
+
+                        <td>
+
+                            {% if action.is_overdue %}
+
+                                <span class="has-text-danger">
+                                    <strong>
+                                        {{ action.due_date }}
+                                    </strong>
+                                </span>
+
+                            {% elif action.due_date %}
+
+                                {{ action.due_date }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+
+                            <a
+                                href="{% url 'action_edit' action.pk %}"
+                                class="button is-small is-light">
+
+                                Edit
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="has-text-centered">
+
+                            No actions found.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends "car/base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="level">
+
+        <div class="level-left">
+
+            <div>
+
+                <h1 class="title">
+                    {{ action.action_code }}
+                </h1>
+
+                <h2 class="subtitle">
+                    {{ action.title }}
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="level-right">
+
+            <a
+                href="{% url 'action_edit' action.pk %}"
+                class="button is-light">
+
+                Edit
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- Status -->
+
+    <div class="box">
+
+        <div class="columns">
+
+            <div class="column">
+
+                <strong>Status</strong>
+
+                <br>
+
+                {{ action.get_status_display }}
+
+            </div>
+
+
+            <div class="column">
+
+                <strong>Priority</strong>
+
+                <br>
+
+                {{ action.get_priority_display }}
+
+            </div>
+
+
+            <div class="column">
+
+                <strong>Type</strong>
+
+                <br>
+
+                {{ action.get_action_type_display }}
+
+            </div>
+
+
+            <div class="column">
+
+                <strong>Owner</strong>
+
+                <br>
+
+                {{ action.owner }}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Description -->
+
+    <div class="box">
+
+        <h2 class="subtitle">
+            Description
+        </h2>
+
+        {% if action.description %}
+
+            <div class="content">
+                {{ action.description|linebreaks }}
+            </div>
+
+        {% else %}
+
+            <p class="has-text-grey">
+                No description provided.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- Dates -->
+
+    <div class="box">
+
+        <h2 class="subtitle">
+            Lifecycle
+        </h2>
+
+        <table class="table is-fullwidth">
+
+            <tbody>
+
+                <tr>
+                    <th>Due Date</th>
+                    <td>
+                        {% if action.due_date %}
+                            {{ action.due_date }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>Started</th>
+                    <td>
+                        {% if action.started_at %}
+                            {{ action.started_at }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>Completed</th>
+                    <td>
+                        {% if action.completed_at %}
+                            {{ action.completed_at }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>Completed By</th>
+                    <td>
+                        {% if action.completed_by %}
+                            {{ action.completed_by }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- Overdue -->
+
+    {% if action.is_overdue %}
+
+        <div class="notification is-danger">
+
+            <strong>Overdue</strong>
+
+            This action passed its due date and has not been
+            completed or cancelled.
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- Actions -->
+
+    <div class="box">
+
+        <h2 class="subtitle">
+            Action
+        </h2>
+
+
+        {% if action.status == "planned" %}
+
+            <form
+                method="post"
+                action="{% url 'action_start' action.pk %}"
+                style="display:inline">
+
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button is-primary">
+
+                    Start Action
+
+                </button>
+
+            </form>
+
+        {% elif action.status == "in_progress" %}
+
+            <form
+                method="post"
+                action="{% url 'action_complete' action.pk %}"
+                style="display:inline">
+
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button is-success">
+
+                    Mark Complete
+
+                </button>
+
+            </form>
+
+        {% elif action.status == "completed" %}
+
+            <form
+                method="post"
+                action="{% url 'action_reopen' action.pk %}"
+                style="display:inline">
+
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button is-warning">
+
+                    Reopen
+
+                </button>
+
+            </form>
+
+        {% endif %}
+
+    </div>
+
+
+    <div>
+
+        <a
+            href="{% url 'action_list' %}"
+            class="button is-light">
+
+            Back to Actions
+
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

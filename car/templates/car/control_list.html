@@ -21,7 +21,7 @@
         {% for contrl in control_list %}
           <tr>
             <td>
-               {{ contrl.control_label }}
+               <a href="{% url 'control_edit' contrl.pk %}">{{ contrl.control_label }}</a>
             </td>
             <td>{{ contrl.description }}</td>
 			<td>

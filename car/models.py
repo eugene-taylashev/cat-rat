@@ -297,7 +297,7 @@ class Action(TimestampedModel):
 
         self.save(user=user)
 
-    #@property
+    @property
     #----------------------
     def is_overdue(self):
         if self.status in {
@@ -328,7 +328,18 @@ class Action(TimestampedModel):
         self.completed_by = None
 
         self.save(user=user)
-    
+
+    #----------------------
+    def cancel(self, user=None):
+        if self.status == ActionStatus.COMPLETED:
+            raise ValidationError(
+                "Completed actions cannot be cancelled."
+            )
+
+        self.status = ActionStatus.CANCELLED
+        self.save(user=user)    
+
+
 #==============================================================================
 # Choices for Risk assessment, ISO 27005 lifecycle
 #==============================================================================

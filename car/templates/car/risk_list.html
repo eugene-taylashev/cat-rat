@@ -21,7 +21,7 @@
         {% for risk in risk_list %}
           <tr>
             <td>
-               {{ risk.risk_code }}
+               <a href="{% url 'risk_edit' risk.pk %}">{{ risk.risk_code }}</a>
             </td>
             <td>{{ risk.scenario }}</td>
 			<td>

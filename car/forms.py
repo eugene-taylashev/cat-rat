@@ -1,7 +1,10 @@
 from django import forms #type: ignore
 from django.forms import inlineformset_factory  
+import logging
 
 from .models import *
+
+logger = logging.getLogger(__name__)
 
 #==============================================================================
 class OwnerForm(forms.ModelForm):
@@ -438,3 +441,173 @@ class RiskForm(forms.ModelForm):
                     "inherent_impact",
                     "Impact is required for an assessed risk."
                 )
+
+#==============================================================================
+class ActionForm(forms.ModelForm):
+
+    class Meta:
+        model = Action
+
+        fields = [
+            "action_code",
+            "title",
+            "description",
+            "action_type",
+            "owner",
+            "priority",
+            "due_date",
+        ]
+
+        widgets = {
+            "action_code": forms.TextInput(
+                attrs={
+                    "class": "input",
+                    "placeholder": "ACT-001",
+                }
+            ),
+
+            "title": forms.TextInput(
+                attrs={
+                    "class": "input",
+                    "placeholder": "Action title",
+                }
+            ),
+
+            "description": forms.Textarea(
+                attrs={
+                    "class": "textarea",
+                    "rows": 5,
+                }
+            ),
+
+            "action_type": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "owner": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "priority": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "status": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+
+            "due_date": forms.DateInput(
+                attrs={
+                    "class": "input",
+                    "type": "date",
+                }
+            ),
+        }
+
+        labels = {
+            "action_code": "Action Code",
+            "title": "Title",
+            "description": "Description",
+            "action_type": "Action Type",
+            "owner": "Owner",
+            "priority": "Priority",
+            "status": "Status",
+            "due_date": "Due Date",
+        }
+
+    #-------------------------------------
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["owner"].queryset = (
+            Owner.objects
+            .order_by("name")
+        )
+        
+        logger.debug(
+            "ActionForm initialized. instance=%s, bound=%s",
+            self.instance,
+            self.is_bound,
+        )
+
+    #-------------------------------------
+    def clean(self):
+        """
+        Form-wide validation and debugging.
+        """
+
+        logger.debug("================================================")
+        logger.debug("ActionForm.clean() started")
+        logger.debug("Raw form data: %s", self.data)
+
+        cleaned_data = super().clean()
+
+        logger.debug(
+            "ActionForm.cleaned_data: %s",
+            cleaned_data
+        )
+
+        logger.debug(
+            "ActionForm.errors after field validation: %s",
+            self.errors
+        )
+
+        # -------------------------------------------------
+        # Example validation
+        # -------------------------------------------------
+
+        action_code = cleaned_data.get("action_code")
+        title = cleaned_data.get("title")
+        owner = cleaned_data.get("owner")
+        due_date = cleaned_data.get("due_date")
+
+        logger.debug(
+            "action_code=%r",
+            action_code
+        )
+
+        logger.debug(
+            "title=%r",
+            title
+        )
+
+        logger.debug(
+            "owner=%r",
+            owner
+        )
+
+        logger.debug(
+            "due_date=%r",
+            due_date
+        )
+
+        # -------------------------------------------------
+        # Your custom validation can go here
+        # -------------------------------------------------
+
+        if not action_code:
+            logger.warning(
+                "ActionForm validation: action_code is empty"
+            )
+
+        if not title:
+            logger.warning(
+                "ActionForm validation: title is empty"
+            )
+
+        if owner is None:
+            logger.warning(
+                "ActionForm validation: owner is None"
+            )
+
+        logger.debug("ActionForm.clean() completed")
+
+        return cleaned_data        

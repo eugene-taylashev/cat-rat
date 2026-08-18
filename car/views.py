@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 #==============================================================================
 def main(request):
     '''
-    Placeholder for the main page
+    Placeholder for the main page with dashboard
         input: request
         output: rendered HTML page
     '''
@@ -47,31 +47,38 @@ def owner_edit(request, pk=0):
         input: request, primary_key
         output: rendered HTML page
     '''
+    logger.debug(
+        "owner_edit: request=%s method=%s pk=%s user=%s",
+        request, request.method, pk, request.user, )
 
     is_new = pk == 0
+    if is_new:
     # ---------------------------------------------------------
     # CREATE new Owner
     # ---------------------------------------------------------
-    if is_new:
         owner = Owner()
         logger.debug("owner_edit: creating new owner by %s", request.user)
 
+    else:
     # ---------------------------------------------------------
     # EDIT existing Owner
     # ---------------------------------------------------------
-    else:
         owner = get_object_or_404(Owner, pk=pk)
+        logger.debug( "owner_edit: found object for owner pk=%s", owner.pk)
 
+    if request.method == "POST":
     # ---------------------------------------------------------
     # POST
     # ---------------------------------------------------------
-    if request.method == "POST":
+        logger.debug( "POST data: %s", request.POST )
+
         form = OwnerForm(request.POST, instance=owner)
         # For both new and existing Owner
         formset = OwnerMembershipFormSet(request.POST,instance=owner)
         logger.debug("owner_edit: updating owner pk=%s by %s", owner.pk, request.user)
 
         if form.is_valid() and formset.is_valid():
+            logger.debug( "OwnerForm and OwnerMembershipFormSet valid. OwnerForm.cleaned_data=%s\nOwnerMembershipFormSet.cleaned_data=%s", form.cleaned_data, formset.cleaned_data, )
 
             with transaction.atomic():
 
@@ -88,23 +95,28 @@ def owner_edit(request, pk=0):
                 formset.save()
 
             messages.success(
-                request,
-                "Owner saved successfully."
+                request, "Owner created successfully."
+                if is_new
+                else "Owner updated successfully."
             )
 
-            return redirect("owner_edit",pk=owner.pk)
+            #return redirect("owner_edit",pk=owner.pk)
+            return HttpResponseRedirect( f"/car/owner/", preserve_request=False)
 
         else:
-            # Validation failed.
-            # Do not redirect or recreate the forms.
-            # Keep the submitted forms so their errors are displayed.
-            pass
+            logger.error( "OwnerForm or OwnerMembershipFormSet validation failed")
+            logger.error( "Form errors: %s", form.errors)
+            logger.error( "Form errors as JSON: %s", form.errors.as_json() )
+            logger.error( "Non-field errors: %s", form.non_field_errors())
+            logger.error( "FormSet errors: %s", formset.errors)
+            logger.error( "FormSet errors as JSON: %s", formset.errors.as_json() )
+            logger.error( "Non-field errors: %s", formset.non_field_errors())
+
 
     # ---------------------------------------------------------
     # GET
     # ---------------------------------------------------------
     else:
-
         form = OwnerForm(instance=owner)
         formset = OwnerMembershipFormSet(instance=owner)
         logger.debug("owner_edit: accessing owner pk=%s by %s", owner.pk, request.user)
@@ -163,30 +175,68 @@ def asset_list(request):
 #==============================================================================
 def asset_edit(request, pk=0):
     '''
-    View/edit one asset by ID/pk or create new with pk=0
+    View/edit one asset by PK or create new with pk=0
         input: request, primary_key
         output: rendered HTML page
     '''
-    if pk == 0:
+    logger.debug(
+        "asset_edit: request=%s method=%s pk=%s user=%s",
+        request, request.method, pk, request.user, )
+
+    is_new = pk == 0
+
+    if is_new:
+    # ---------------------------------------------------------
+    # CREATE new Asset
+    # ---------------------------------------------------------
         asset = Asset()
         #ownermembership__is_primary=True,
         asset.owner = Owner.objects.filter(
             ownermembership__user=request.user,
             ).first()
         logger.debug("asset_edit: creating new asset by %s", request.user)
+
     else:
+    # ---------------------------------------------------------
+    # EDIT existing Asset
+    # ---------------------------------------------------------
         asset = get_object_or_404(Asset, pk=pk)
+        logger.debug( "asset_edit: found object for asset pk=%s", asset.pk)
         #can_edit = can_edit_asset(request.user, asset)
 
     if request.method == 'POST':
+    # ---------------------------------------------------------
+    # POST
+    # ---------------------------------------------------------
+        logger.debug( "POST data: %s", request.POST )
+        
         form = AssetForm(request.POST, instance=asset)
         logger.debug("asset_edit: updating asset pk=%s by %s", asset.pk, request.user)
+
         if form.is_valid():
+            logger.debug( "AssetForm valid. cleaned_data=%s", form.cleaned_data )
             asset.save(user=request.user)  # Saves to the Asset model
+            logger.debug( "Asset saved: %s", asset )
+
+            messages.success(
+                request, "Asset created successfully."
+                if is_new
+                else "Asset updated successfully."
+            )
+
             return HttpResponseRedirect( f"/car/asset/", preserve_request=False)
+
+        else:
+            logger.error( "AssetForm validation failed")
+            logger.error( "Form errors: %s", form.errors)
+            logger.error( "Form errors as JSON: %s", form.errors.as_json() )
+            logger.error( "Non-field errors: %s", form.non_field_errors())
+
     else:
+    # ---------------------------------------------------------
+    # GET
+    # ---------------------------------------------------------
         form = AssetForm(instance=asset)
-        logger.debug("asset_edit: accessing asset pk=%s by %s", asset.pk, request.user)
 
     context = {"asset": asset, "form": form, "ptitle": "Asset: %s" % asset.name} #, "can_edit": can_edit
     return render(request, "car/asset_edit.html", context)
@@ -212,25 +262,62 @@ def control_edit(request, pk=0):
         input: request, primary_key
         output: rendered HTML page
     '''
-    if pk == 0:
+    logger.debug(
+        "control_edit: request=%s method=%s pk=%s user=%s",
+        request, request.method, pk, request.user, )
+
+    is_new = pk == 0
+
+    if is_new:
+    # ---------------------------------------------------------
+    # CREATE new Control
+    # ---------------------------------------------------------
         control = Control()
-        #ownermembership__is_primary=True,
         control.owner = Owner.objects.filter(
             ownermembership__user=request.user,
             ).first()
         logger.debug("control_edit: creating new control by %s", request.user)
+
     else:
+    # ---------------------------------------------------------
+    # EDIT existing Control
+    # ---------------------------------------------------------
         control = get_object_or_404(Control, pk=pk)
+        logger.debug( "control_edit: found object for control pk=%s", control.pk)
 
     if request.method == 'POST':
+    # ---------------------------------------------------------
+    # POST
+    # ---------------------------------------------------------
+        logger.debug( "POST data: %s", request.POST )
+        
         form = ControlForm(request.POST, instance=control, user=request.user)
-        logger.debug("control_edit: updating control pk=%s by %s", control.pk, request.user)
+
         if form.is_valid():
+            logger.debug( "ControlForm valid. cleaned_data=%s", form.cleaned_data )
+
             control.save(user=request.user)  # Saves to the Control model
+            logger.debug( "Control saved: %s", control )
+
+            messages.success(
+                request, "Control created successfully."
+                if is_new
+                else "Control updated successfully."
+            )
+
             return HttpResponseRedirect( f"/car/control/", preserve_request=False)
+
+        else:
+            logger.error( "ControlForm validation failed")
+            logger.error( "Form errors: %s", form.errors)
+            logger.error( "Form errors as JSON: %s", form.errors.as_json() )
+            logger.error( "Non-field errors: %s", form.non_field_errors())
+
     else:
+    # ---------------------------------------------------------
+    # GET
+    # ---------------------------------------------------------
         form = ControlForm(instance=control, user=request.user)
-        logger.debug("control_edit: accessing control pk=%s by %s", control.pk, request.user)
 
     context = {"control": control, "form": form}
     return render(request, "car/control_edit.html", context)
@@ -330,67 +417,80 @@ def risk_list(request):
 
 #==============================================================================
 def risk_edit(request, pk=0):
+    '''
+    View/edit one risk by PK or create new with pk=0
+        input: request, primary_key
+        output: rendered HTML page
+    '''
+
+    logger.debug(
+        "risk_edit: request=%s method=%s pk=%s user=%s",
+        request, request.method, pk, request.user, )
 
     is_new = pk == 0
 
     if is_new:
+    # ---------------------------------------------------------
+    # CREATE new Risk
+    # ---------------------------------------------------------
         risk = Risk()
+        risk.owner = Owner.objects.filter(
+            ownermembership__user=request.user,
+            ).first()
+
     else:
-        risk = get_object_or_404(
-            Risk,
-            pk=pk
-        )
+    # ---------------------------------------------------------
+    # EDIT existing Risk
+    # ---------------------------------------------------------
+        risk = get_object_or_404( Risk, pk=pk )
+        logger.debug( "risk_edit: found object for risk pk=%s", risk.pk)
 
     if request.method == "POST":
+    # ---------------------------------------------------------
+    # POST
+    # ---------------------------------------------------------
 
-        form = RiskForm(
-            request.POST,
-            instance=risk
-        )
+        logger.debug( "POST data: %s", request.POST )
+        form = RiskForm( request.POST, instance=risk )
 
         if form.is_valid():
 
+            logger.debug( "RiskForm valid. cleaned_data=%s", form.cleaned_data )
             with transaction.atomic():
 
-                risk = form.save(
-                    commit=False
-                )
+                risk = form.save( commit=False )
 
-                # Our TimestampedModel
-                risk.save(
-                    user=request.user
-                )
+                logger.debug( "Risk before save: %s", risk )
+                # Our TimestampedModel requires User
+                risk.save( user=request.user )
+                logger.info( "Risk saved: pk=%s", risk.pk )
 
                 # Important because controls is ManyToMany
                 form.save_m2m()
 
             messages.success(
-                request,
-                "Risk created successfully."
+                request, "Risk created successfully."
                 if is_new
                 else "Risk updated successfully."
             )
 
-            return redirect(
-                "risk_edit",
-                pk=risk.pk
-            )
+            return HttpResponseRedirect( f"/car/risk/", preserve_request=False)
+
+        else:
+            logger.error( "RiskForm validation failed")
+            logger.error( "Form errors: %s", form.errors)
+            logger.error( "Form errors as JSON: %s", form.errors.as_json() )
+            logger.error( "Non-field errors: %s", form.non_field_errors())
 
     else:
+    # ---------------------------------------------------------
+    # GET
+    # ---------------------------------------------------------
+        form = RiskForm( instance=risk )
 
-        form = RiskForm(
-            instance=risk
-        )
+    context = {"risk": risk, "form": form, "is_new": is_new,}
+    return render(request, "car/risk_edit.html", context)
 
-    return render(
-        request,
-        "car/risk_edit.html",
-        {
-            "risk": risk,
-            "form": form,
-            "is_new": is_new,
-        }
-    )
 
 #==============================================================================
 @require_POST  # ensures it only deletes via POST (for safety)
@@ -410,4 +510,213 @@ def risk_delete(request, pk):
     return redirect('risk_list')  
 
 
+#==============================================================================
+@login_required
+def action_edit(request, pk=0):
+    '''
+    View/edit one action by PK or create new with pk=0
+        input: request, primary_key
+        output: rendered HTML page
+    '''
+
+    logger.debug(
+        "action_edit: request=%s method=%s pk=%s user=%s",
+        request, request.method, pk, request.user, )
     
+    is_new = pk == 0
+
+    if is_new:
+    # ---------------------------------------------------------
+    # CREATE new Action
+    # ---------------------------------------------------------
+        action = Action()
+        action.owner = Owner.objects.filter(
+            ownermembership__user=request.user,
+            ).first()
+    else:
+    # ---------------------------------------------------------
+    # EDIT existing Action
+    # ---------------------------------------------------------
+        action = get_object_or_404( Action, pk=pk )
+        logger.debug( "action_edit: found object for action pk=%s", action.pk)
+
+    if request.method == "POST":
+    # ---------------------------------------------------------
+    # POST
+    # ---------------------------------------------------------
+
+        logger.debug( "POST data: %s", request.POST )
+        form = ActionForm( request.POST, instance=action, )
+
+        valid = form.is_valid()
+
+        logger.debug(
+            "form.is_valid() returned: %s",
+            valid
+        )
+
+        if form.is_valid():
+
+            logger.debug( "ActionForm valid. cleaned_data=%s", form.cleaned_data )
+
+            with transaction.atomic():
+
+                action = form.save( commit=False )
+                logger.debug( "Action before save: %s", action )
+
+                # Make absolutely sure a new action starts as PLANNED
+                if action.pk is None:
+                    action.status = ActionStatus.PLANNED
+
+                action.save( user=request.user )
+                logger.info( "Action saved: pk=%s", action.pk )
+
+            messages.success( request, "Action created successfully."
+                if is_new
+                else "Action updated successfully."
+            )
+
+            #return redirect( "action_detail", pk=action.pk )
+            return HttpResponseRedirect( f"/car/actions/", preserve_request=False)
+
+        else:
+            logger.error( "ActionForm validation failed")
+            logger.error( "Form errors: %s", form.errors)
+            logger.error( "Form errors as JSON: %s", form.errors.as_json() )
+            logger.error( "Non-field errors: %s", form.non_field_errors())
+
+    else:
+    # ---------------------------------------------------------
+    # GET
+    # ---------------------------------------------------------
+        form = ActionForm( instance=action )
+
+    context = {"action": action, "form": form, "is_new": is_new,}
+    return render(request, "car/action_edit.html", context)
+
+
+#==============================================================================
+@login_required
+def action_detail(request, pk):
+
+    action = get_object_or_404(
+        Action.objects.select_related(
+            "owner",
+            "completed_by",
+        ),
+        pk=pk
+    )
+
+    return render(
+        request,
+        "car/action_detail.html",
+        {
+            "action": action,
+        }
+    )    
+
+#==============================================================================
+@login_required
+def action_list(request):
+
+    actions = (
+        Action.objects
+        .select_related(
+            "owner",
+            "completed_by",
+        )
+        .order_by(
+            "status",
+            "due_date",
+            "priority",
+            "title",
+        )
+    )
+
+    return render(
+        request,
+        "car/action_list.html",
+        {
+            "actions": actions,
+        }
+    )
+
+
+#==============================================================================
+@login_required
+@require_POST
+def action_start(request, pk):
+
+    action = get_object_or_404(
+        Action,
+        pk=pk
+    )
+
+    if action.status == ActionStatus.PLANNED:
+
+        action.start(
+            user=request.user
+        )
+
+        messages.success(
+            request,
+            f"Action {action.action_code} started."
+        )
+
+    return redirect(
+        "action_detail",
+        pk=action.pk
+    )
+
+
+#==============================================================================
+@login_required
+@require_POST
+def action_complete(request, pk):
+
+    action = get_object_or_404(
+        Action,
+        pk=pk
+    )
+
+    if action.status != ActionStatus.COMPLETED:
+
+        action.mark_done(
+            user=request.user
+        )
+
+        messages.success(
+            request,
+            f"Action {action.action_code} completed."
+        )
+
+    return redirect(
+        "action_detail",
+        pk=action.pk
+    )
+
+#==============================================================================
+@login_required
+@require_POST
+def action_reopen(request, pk):
+
+    action = get_object_or_404(
+        Action,
+        pk=pk
+    )
+
+    if action.status == ActionStatus.COMPLETED:
+
+        action.reopen(
+            user=request.user
+        )
+
+        messages.success(
+            request,
+            f"Action {action.action_code} reopened."
+        )
+
+    return redirect(
+        "action_detail",
+        pk=action.pk
+    )

@@ -114,6 +114,31 @@ TIME_ZONE = 'America/Toronto'
 USE_I18N = True
 
 USE_TZ = True
+# Logging configuration for development only
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+
+        # Replace "myapp" with your Django application name
+        "car": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
+}
 
 
 # Static files (CSS, JavaScript, Images)
