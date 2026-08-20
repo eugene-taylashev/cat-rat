@@ -11,8 +11,6 @@ from django.shortcuts import redirect   # type: ignore
 
 from . import views
 
-app_name = "car"
-
 urlpatterns = [
     # /
     path("", include("car.urls")),

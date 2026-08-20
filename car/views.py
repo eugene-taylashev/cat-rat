@@ -779,3 +779,136 @@ def action_reopen(request, pk):
         "action_detail",
         pk=action.pk
     )
+
+@login_required
+#==============================================================================
+def dashboard(request):
+    '''
+    Dashboard with all KPIs for overall review:
+        Risks
+            Total Risks
+            Open Risks
+            High Risks
+            Critical Risks
+            Risks Reviewed This Year
+            Overdue Reviews
+        Actions
+            Open Actions
+            In Progress Actions
+            Overdue Actions
+            Completed Actions
+        Assessments
+            Planned Assessments
+            In Progress Assessments
+            Completed Assessments
+            Completion %
+        Controls
+            Total Controls
+            Active Controls
+            Controls Without Owner
+            Controls Not Assessed    
+
+        input: request
+        output: rendered HTML page
+    '''
+
+    #owners = Owner.objects.filter( ownermembership__user=request.user ).distinct()
+    risks = Risk.objects      # .filter(owner__in=owners)
+    actions = Action.objects  #.filter(owner__in=owners)
+
+    #-- Risk KPIs
+    total_risks = risks.count()
+    high_risks = risks.filter(residual_level=RiskLevel.HIGH).count()
+    critical_risks = risks.filter(residual_level=RiskLevel.CRITICAL).count()
+
+    #-- Action KPIs
+    open_actions = actions.exclude(status=ActionStatus.COMPLETED).count()
+    completed_actions = actions.filter(status=ActionStatus.COMPLETED).count()
+    #overdue_actions = sum(1 for a in actions if a.is_overdue())
+
+    #-- Risk distribution chart
+    risk_chart = {
+        "Low": risks.filter(residual_level=RiskLevel.LOW).count(),
+        "Medium": risks.filter(residual_level=RiskLevel.MEDIUM).count(),
+        "High": risks.filter(residual_level=RiskLevel.HIGH).count(),
+        "Critical": risks.filter(residual_level=RiskLevel.CRITICAL).count(),
+    }
+
+    #-- Acion status chart
+    action_chart = {
+        "Planned": actions.filter(status="planned").count(),
+        "In_Progress": actions.filter(status="in_progress").count(),
+        "Completed": actions.filter(status="completed").count(),
+        "Cancelled": actions.filter(status="cancelled").count(),
+    }    
+
+    #=== Risk Heat Map
+    risk_map = Risk.objects.filter(
+        residual_likelihood__isnull=False,
+        residual_impact__isnull=False,
+    )
+
+    # Create empty 5x5 matrix
+    matrix = []
+    
+    for impact in range(5, 0, -1):
+        row = []
+
+        for likelihood in range(1, 6):
+
+            score = likelihood * impact
+
+            if score <= 4:
+                level = "Low"
+                css_class = "risk-low"
+
+            elif score <= 9:
+                level = "Medium"
+                css_class = "risk-medium"
+
+            elif score <= 16:
+                level = "High"
+                css_class = "risk-high"
+
+            else:
+                level = "Critical"
+                css_class = "risk-critical"
+
+            cell_risks = risk_map.filter(
+                residual_likelihood=likelihood,
+                residual_impact=impact,
+            )
+
+            row.append({
+                "likelihood": likelihood,
+                "impact": impact,
+                "score": score,
+                "level": level,
+                "css_class": css_class,
+                "risks": cell_risks,
+                "count": cell_risks.count(),
+            })
+
+        matrix.append({
+            "impact": ImpactLevel(impact).label,
+            "cells": row,
+        })
+    
+    context = {
+        "total_risks": total_risks,
+        "high_risks": high_risks,
+        "critical_risks": critical_risks,
+
+        "open_actions": open_actions,
+        "completed_actions": completed_actions,
+        #"overdue_actions": overdue_actions,
+
+        "risk_chart": risk_chart,
+        "action_chart": action_chart,
+
+        "matrix": matrix,
+        "risk_count": risk_map.count(),
+        "likelihood": LikelihoodLevel.choices,
+    }
+
+    return render(request,"car/dashboard.html",context,)    

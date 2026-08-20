@@ -12,6 +12,8 @@
     <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script -->
     <!-- HTMX: https://htmx.org/ -->
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V" crossorigin="anonymous"></script>
+	<!-- Chart.js https://www.chartjs.org/ -->
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       .modal.is-active { display: flex; }
       .category-highlight {
@@ -53,6 +55,29 @@
         border-radius: 5px; 
         background-color: #f5f5f5;
       }
+	  .heatmap td {
+		width: 80px;
+		height: 60px;
+		text-align: center;
+		vertical-align: middle;
+		font-weight: bold;
+	  }
+
+	  .risk-low {
+		--bulma-table-cell-background-color: #c6efce;
+	  }
+
+	  .risk-medium {
+		--bulma-table-cell-background-color: #ffeb9c;
+	  }
+
+	  .risk-high {
+		--bulma-table-cell-background-color: #f4b183;
+	  }
+
+	  .risk-critical {
+		--bulma-table-cell-background-color: #f8696b;
+	  }
     </style>
     <script>
       log	= (msg)=>{window.console&&console.log(msg);}
@@ -91,11 +116,11 @@
       <div id="mainNavbar" class="navbar-menu">
         <!-- LEFT side -->
         <div class="navbar-start">
-          <a class="navbar-item" href="{% url 'main' %}">Home</a>
-          <a class="navbar-item" href="{% url 'action_list' %}">Actions</a>
-          <a class="navbar-item" href="{% url 'risk_list' %}">Risks</a>
-          <a class="navbar-item" href="{% url 'control_list' %}">Controls</a>
-          <a class="navbar-item" href="{% url 'asset_list' %}">Assets</a>
+          <a class="navbar-item" href="{% url 'car:main' %}">Home</a>
+          <a class="navbar-item" href="{% url 'car:action_list' %}">Actions</a>
+          <a class="navbar-item" href="{% url 'car:risk_list' %}">Risks</a>
+          <a class="navbar-item" href="{% url 'car:control_list' %}">Controls</a>
+          <a class="navbar-item" href="{% url 'car:asset_list' %}">Assets</a>
         </div>
 
         <!-- RIGHT side -->

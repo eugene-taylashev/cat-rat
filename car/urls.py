@@ -2,6 +2,9 @@ from django.urls import path     # type: ignore
 
 from . import views
 
+app_name = "car" # CAT and RAT = CaR
+
+
 urlpatterns = [
     path("", views.main, name="main"),
 
@@ -36,4 +39,7 @@ urlpatterns = [
     path("actions/<int:pk>/complete/", views.action_complete, name="action_complete"),
     path("actions/<int:pk>/reopen/", views.action_reopen, name="action_reopen"),
 
+    #-- Other
+    path("dashboard/", views.dashboard, name="dashboard"),
+    
 ]

@@ -1,0 +1,145 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+<div class="columns">
+
+    <div class="column">
+        <div class="box">
+            <p class="heading">Risks</p>
+            <p class="title">{{ total_risks }}</p>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="box">
+            <p class="heading">High Risks</p>
+            <p class="title">{{ high_risks }}</p>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="box">
+            <p class="heading">Critical Risks</p>
+            <p class="title">{{ critical_risks }}</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="box">
+    <h2 class="title is-5">Risk Heat Map</h2>
+	<p>Total risks: {{ risk_count }}</p>
+
+	<table class="table is-bordered heatmap">
+      <thead>
+        <tr>
+            <th>Impact \ Likelihood</th>
+			{% for value, label in likelihood %}
+				<th>{{ value }} - {{ label }} </th>
+			{% endfor %}
+		</tr>
+      </thead>
+      <tbody>
+
+        {% for row in matrix %}
+
+        <tr>
+
+            <th>
+                {{ forloop.revcounter }} - {{ row.impact }}
+            </th>
+
+            {% for cell in row.cells %}
+
+            <td class="heatmap-cell {{ cell.css_class }}"  title="{{ cell.level }}">
+
+                {% if cell.count %}
+                    <div class="risk-count">
+                        {{ cell.count }} risk{{ cell.count|pluralize }}
+                    </div>
+                {% endif %}
+
+            </td>
+
+            {% endfor %}
+
+        </tr>
+
+        {% endfor %}
+
+      </tbody>
+
+	</table>
+</div>
+
+<div class="box">
+    <h2 class="title is-5">Risk Distribution</h2>
+	<div class="chart-container" style="position: relative; width: 600px;">
+		<canvas id="riskChart"></canvas>
+	</div>
+</div>
+
+<div class="box">
+    <h2 class="title is-5">Action status</h2>
+	<div class="chart-container" style="position: relative; width: 600px;">
+		<canvas id="actionChart"></canvas>
+	</div>
+</div>
+
+<script>
+
+new Chart(
+    document.getElementById('riskChart'),
+    {
+        type: 'bar',
+
+        data: {
+            labels: [
+                'Low',
+                'Medium',
+                'High',
+                'Critical'
+            ],
+
+            datasets: [{
+                label: 'Risks',
+
+                data: [
+                    {{ risk_chart.Low }},
+                    {{ risk_chart.Medium }},
+                    {{ risk_chart.High }},
+                    {{ risk_chart.Critical }}
+                ]
+            }]
+        }
+    }
+);
+
+
+new Chart(
+    document.getElementById('actionChart'),
+    {
+        type: 'doughnut',
+
+        data: {
+            labels: [
+                'Planned',
+                'In Progress',
+                'Completed',
+                'Cancelled'
+            ],
+
+            datasets: [{
+                data: [
+                    {{ action_chart.Planned }},
+                    {{ action_chart.In_Progress }},
+                    {{ action_chart.Completed }},
+                    {{ action_chart.Cancelled }}
+                ]
+            }]
+        }
+    }
+);
+
+</script>
+{% endblock %}
