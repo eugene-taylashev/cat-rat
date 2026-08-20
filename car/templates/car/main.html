@@ -2,8 +2,122 @@
 {% block content %}
 {% load static %}
 
-    <div class="container">
-	  <div>Main page
-      </div>
-    </div>
+  <h1 class="title">Dashboard</h1>
+
+	<div class="columns">
+
+		<div class="column">
+			<div class="box has-text-centered">
+				<a class="heading" href="{% url 'action_list' %}">Actions</a>
+				<p class="title">{{ action_count }}</p>
+			</div>
+		</div>
+
+		<div class="column">
+			<div class="box has-text-centered">
+				<a class="heading" href="{% url 'risk_list' %}">Risks</a>
+				<p class="title">{{ risk_count }}</p>
+			</div>
+		</div>
+
+		<div class="column">
+			<div class="box has-text-centered">
+				<a class="heading" href="{% url 'control_list' %}">Controls</a>
+				<p class="title">{{ control_count }}</p>
+			</div>
+		</div>
+
+		<div class="column">
+			<div class="box has-text-centered">
+				<a class="heading" href="{% url 'asset_list' %}">Assets</a>
+				<p class="title">{{ asset_count }}</p>
+			</div>
+		</div>
+
+	</div>
+
+	<div class="box">
+
+		<h2 class="title is-5">Open Actions</h2>
+
+		<table class="table is-fullwidth">
+
+			<thead>
+			  <tr>
+				<th>Code</th>
+				<th>Title</th>
+				<th>Owner</th>
+				<th>Due</th>
+				<th>Status</th>
+			  </tr>
+			</thead>
+
+			<tbody>
+
+			  {% for action in recent_actions %}
+				<tr>
+
+					<td><a href="{% url 'action_edit' action.pk %}">
+							{{ action.action_code }}
+						</a>
+					</td>
+
+					<td>{{ action.title }}</td>
+					<td>{{ action.owner }}</td>
+					<td>{{ action.due_date }}</td>
+					<td>{{ action.get_status_display }}</td>
+
+				</tr>
+
+			  {% endfor %}
+
+			</tbody>
+
+		</table>
+
+	</div>
+
+	<div class="box">
+
+		<h2 class="title is-5">High and Critical Risks</h2>
+
+		<table class="table is-fullwidth">
+
+			<thead>
+			  <tr>
+				<th>Risk</th>
+				<th>Level</th>
+				<th>Next Review</th>
+			  </tr>
+			</thead>
+
+			<tbody>
+
+			  {% for risk in high_risks %}
+
+				<tr>
+
+					<td><a href="{% url 'risk_edit' risk.pk %}">
+                        {{ risk.risk_code }}
+                    </a>
+					</td>
+
+					<td>{{ risk.get_residual_level_display }}</td>
+					<td>{{ risk.next_review_date }}</td>
+
+				</tr>
+
+			  {% empty %}
+
+				<tr>
+					<td colspan="3">No high risks.</td>
+				</tr>
+
+			  {% endfor %}
+
+			</tbody>
+
+		</table>
+
+	</div>
 {% endblock %}

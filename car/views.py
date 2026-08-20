@@ -17,11 +17,70 @@ logger = logging.getLogger(__name__)
 #==============================================================================
 def main(request):
     '''
-    Placeholder for the main page with dashboard
+    Dashboard for a user with the concept:
+    Show me everything that belongs to my Owner groups and requires my attention.
         input: request
         output: rendered HTML page
     '''
-    return render(request, "car/main.html")
+    owners = Owner.objects.filter( ownermembership__user=request.user ).distinct()
+
+    assets = Asset.objects.filter( owner__in=owners )
+    controls = Control.objects.filter( owner__in=owners ) 
+    risks = Risk.objects.filter( owner__in=owners )
+    actions = Action.objects.filter( owner__in=owners )
+
+    action_status = (
+        actions.values("status")
+        .annotate(total=Count("id"))
+        .order_by("status")
+    )
+
+    context = {
+        "owners": owners,
+
+        "asset_count": assets.count(),
+        "control_count": controls.count(),
+        "risk_count": risks.count(),
+
+        "action_count": actions.count(),
+
+        "planned_actions":
+            actions.filter(
+                status=ActionStatus.PLANNED
+            ).count(),
+
+        "in_progress_actions":
+            actions.filter(
+                status=ActionStatus.IN_PROGRESS
+            ).count(),
+
+        "completed_actions":
+            actions.filter(
+                status=ActionStatus.COMPLETED
+            ).count(),
+
+        #"overdue_actions":
+        #    sum(
+        #        1 for a in actions
+        #        if a.is_overdue()
+        #    ),
+
+        "recent_actions":
+            actions.order_by(
+                "-updated_at"
+            )[:10],
+
+        "high_risks":
+            risks.filter(
+                residual_level__gte=3
+            ).order_by(
+                "-residual_level"
+            )[:10],
+
+        "action_status": list(action_status),
+    }
+
+    return render(request, "car/main.html", context,)
 
 
 

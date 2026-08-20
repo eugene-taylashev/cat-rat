@@ -518,4 +518,82 @@ class ControlAction(models.Model):
         related_name="actions",
     )
 
-    
+#==============================================================================
+# Choices for Assessment / Audit
+#==============================================================================
+class AssessmentType(models.TextChoices):
+    RISK = "risk", "Risk Assessment"
+    CONTROL = "control", "Control Assessment"
+    ANNUAL = "annual", "Annual Assessment"
+    OTHER = "other", "Other"
+
+class AssessmentStatus(models.TextChoices):
+    PLANNED = "planned", "Planned"
+    IN_PROGRESS = "in_progress", "In Progress"
+    COMPLETED = "completed", "Completed"
+    CANCELLED = "cancelled", "Cancelled"
+
+class AssessmentItemStatus(models.TextChoices):
+    NOT_STARTED = "not_started", "Not Started"
+    ASSIGNED = "assigned", "Assigned"
+    IN_PROGRESS = "in_progress", "In Progress"
+    COMPLETED = "completed", "Completed"
+    NOT_APPLICABLE = "not_applicable", "Not Applicable"
+
+#==============================================================================
+class Assessment(models.Model):
+
+    assessment_code = models.CharField( max_length=50, unique=True,)
+    title = models.CharField( max_length=255,)
+    assessment_type = models.CharField(max_length=20,choices=AssessmentType.choices,)
+    status = models.CharField( max_length=20, choices=AssessmentStatus.choices,
+        default=AssessmentStatus.PLANNED, )
+
+    start_date = models.DateField( null=True, blank=True, )
+    due_date = models.DateField( null=True, blank=True,)
+    completed_at = models.DateTimeField( null=True, blank=True, )
+
+    description = models.TextField( blank=True, )
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-start_date", "assessment_code"]
+
+    def __str__(self):
+        return f"{self.assessment_code} - {self.title}"   
+
+
+#==============================================================================
+class AssessmentItem(models.Model):
+    assessment = models.ForeignKey( Assessment, related_name="items", on_delete=models.CASCADE, )
+    risk = models.ForeignKey( Risk, related_name="assessment_items", on_delete=models.PROTECT, null=True, blank=True,)
+    control = models.ForeignKey( Control, related_name="assessment_items", on_delete=models.PROTECT, null=True, blank=True,)
+    owner = models.ForeignKey( Owner, related_name="assessment_items", on_delete=models.PROTECT, )
+    status = models.CharField( max_length=20, choices=AssessmentItemStatus.choices,
+        default=AssessmentItemStatus.NOT_STARTED,
+    )
+
+    assigned_at = models.DateTimeField( null=True, blank=True, )
+    completed_at = models.DateTimeField( null=True, blank=True, )
+    completed_by = models.ForeignKey( settings.AUTH_USER_MODEL, null=True, blank=True, 
+        on_delete=models.SET_NULL,
+        related_name="completed_assessment_items",
+    )
+
+    result = models.TextField(blank=True, )
+    comments = models.TextField( blank=True,)
+
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["status", "id"]       
+        #-- an item points to either a Risk or a Control, but not both
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(risk__isnull=False) ^
+                    models.Q(control__isnull=False)
+                ),
+                name="assessment_item_one_target",
+            ),
+        ]        
