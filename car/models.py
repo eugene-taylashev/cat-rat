@@ -54,6 +54,80 @@ class TimestampedModel(models.Model):
 
         super().save(*args, **kwargs)
 
+
+#==============================================================================
+class AppSettings(TimestampedModel):
+    '''
+    Application or System wide settings
+    It will be only one row in this table
+
+    Usage: 
+        settings = AppSettings.get()
+
+        if settings.control_maturity_advanced:
+    '''
+    
+    #-- Control params
+    control_maturity_advanced = models.BooleanField(
+        default=False,
+        help_text="Enable advanced control maturity assessment (implementation, automation, reporting, documentation)."
+    )
+    control_effectiveness_enabled = models.BooleanField( default=True )
+    control_testing_required = models.BooleanField( default=True )
+    default_control_review_months = models.PositiveIntegerField( default=12 )
+
+    #-- Risk params
+    risk_auto_calculation = models.BooleanField( default=True )
+    default_risk_review_months = models.PositiveIntegerField( default=12 )
+    risk_matrix_size = models.PositiveSmallIntegerField( default=5 )  # 3x3 or 5x5
+    risk_acceptance_threshold = models.PositiveSmallIntegerField( default=6 )
+    high_risk_threshold = models.PositiveSmallIntegerField( default=12 )
+    critical_risk_threshold = models.PositiveSmallIntegerField( default=20 )
+
+    #-- Actions and Remediation
+    action_overdue_warning_days = models.PositiveIntegerField( default=14 )
+    critical_action_due_days = models.PositiveIntegerField( default=30 )
+    high_action_due_days = models.PositiveIntegerField( default=60 )
+    medium_action_due_days = models.PositiveIntegerField( default=90 )
+
+    #-- Compliance and Audit
+    audit_evidence_required = models.BooleanField( default=True )
+    policy_review_months = models.PositiveIntegerField( default=12 )
+    exception_review_months = models.PositiveIntegerField( default=6 )
+    
+    #-- Notifications
+    email_notifications_enabled = models.BooleanField( default=False )
+    notify_risk_owner = models.BooleanField( default=False )
+    notify_control_owner = models.BooleanField( default=False )
+    notify_action_owner = models.BooleanField( default=False )
+    reminder_days_before_due = models.PositiveIntegerField( default=14 )    
+
+    #-- Dashboard / Reporting
+    dashboard_show_closed_risks = models.BooleanField( default=False )
+    dashboard_default_period_days = models.PositiveIntegerField( default=365 )
+    kpi_warning_threshold = models.PositiveIntegerField( default=80 )
+
+    #-- AI Features
+    ai_features_enabled = models.BooleanField( default=False )
+    ai_risk_suggestions_enabled = models.BooleanField( default=False )
+    ai_risk_suggestions_prompt = models.CharField(help_text="Prompt to get risk suggestions", blank=True,null=True)
+    ai_control_recommendations_enabled = models.BooleanField( default=False )
+    ai_control_recommendations_prompt = models.CharField(help_text="Prompt to get control recommendations", blank=True,null=True)
+
+    class Meta:
+        verbose_name = "Application Settings"
+        verbose_name_plural = "Application Settings"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 #==============================================================================
 class Owner(TimestampedModel):
     '''List of asset/controls/evidence/risk owners'''
@@ -390,7 +464,8 @@ class RiskLevel(models.IntegerChoices):
 #==============================================================================
 class Risk(TimestampedModel):
     """
-    The central risk entity — links assets, threat, vulnerability and holds assessment and treatment info.
+    The central risk entity with persistent risk parameters — links assets, 
+        threat, etc.
     Aligns to ISO 27005 risk definition and lifecycle.
     """
     risk_code = models.CharField( max_length=50, unique=True, help_text="human-readable risk identifier",) #i.e. RISK-002
@@ -400,7 +475,7 @@ class Risk(TimestampedModel):
     status = models.CharField(max_length=25, choices=RiskStatus.choices, default=RiskStatus.IDENTIFIED)
 
     # --------------------------------------------------------------
-    # Inherent risk
+    # Inherent rating = risk before considering controls
     # --------------------------------------------------------------
     inherent_likelihood = models.PositiveSmallIntegerField(choices=LikelihoodLevel.choices, null=True, blank=True)
     inherent_impact = models.PositiveSmallIntegerField(choices=ImpactLevel.choices, null=True, blank=True)
@@ -426,7 +501,7 @@ class Risk(TimestampedModel):
     )
 
     # --------------------------------------------------------------
-    # Residual risk
+    # Residual rating = risk after considering existing controls
     # --------------------------------------------------------------
     residual_likelihood = models.PositiveSmallIntegerField(choices=LikelihoodLevel.choices, null=True, blank=True)
     residual_impact = models.PositiveSmallIntegerField(choices=ImpactLevel.choices, null=True, blank=True)
@@ -542,6 +617,19 @@ class AssessmentItemStatus(models.TextChoices):
 
 #==============================================================================
 class Assessment(models.Model):
+    '''
+
+Assessment
+    │
+    ├── AssessmentItem → Risk
+    │       └── RiskAssessment
+    │
+    └── AssessmentItem → Control
+            ├── ControlMaturityAssessment
+            └── ControlTest
+                    └── TestResult
+                            └── CollectedArtifact    
+    '''
 
     assessment_code = models.CharField( max_length=50, unique=True,)
     title = models.CharField( max_length=255,)
@@ -563,12 +651,31 @@ class Assessment(models.Model):
         return f"{self.assessment_code} - {self.title}"   
 
 
+
+#==============================================================================
+class AssessmentItemType(models.TextChoices):
+    RISK = "RISK", "Risk Assessment"
+    CONTROL_MATURITY = "CONTROL_MATURITY", "Control Maturity"
+    CONTROL_TEST = "CONTROL_TEST", "Control Test"
+
 #==============================================================================
 class AssessmentItem(models.Model):
+    '''
+    AssessmentItem = work management
+    Concept: "Somebody has been assigned to perform this assessment."
+    '''
     assessment = models.ForeignKey( Assessment, related_name="items", on_delete=models.CASCADE, )
+
+    item_type = models.CharField(
+        max_length=30,
+        choices=AssessmentItemType.choices,
+        null=True, blank=True,
+    )
+
     risk = models.ForeignKey( Risk, related_name="assessment_items", on_delete=models.PROTECT, null=True, blank=True,)
     control = models.ForeignKey( Control, related_name="assessment_items", on_delete=models.PROTECT, null=True, blank=True,)
     owner = models.ForeignKey( Owner, related_name="assessment_items", on_delete=models.PROTECT, )
+
     status = models.CharField( max_length=20, choices=AssessmentItemStatus.choices,
         default=AssessmentItemStatus.NOT_STARTED,
     )
@@ -580,7 +687,6 @@ class AssessmentItem(models.Model):
         related_name="completed_assessment_items",
     )
 
-    result = models.TextField(blank=True, )
     comments = models.TextField( blank=True,)
 
     history = HistoricalRecords()
@@ -596,4 +702,281 @@ class AssessmentItem(models.Model):
                 ),
                 name="assessment_item_one_target",
             ),
-        ]        
+        ]     
+
+
+#==============================================================================
+class RiskAssessmentType(models.TextChoices):
+    INITIAL = "INITIAL", "Initial Assessment"
+    PERIODIC = "PERIODIC", "Periodic Assessment"
+    EVENT = "EVENT", "Event-Driven Assessment"
+    REVIEW = "REVIEW", "Risk Review"
+
+#==============================================================================
+class RiskAssessment(models.Model):
+    '''
+
+
+Risk
+  │
+  ├── RiskAssessment
+  │      Initial
+  │      Inherent: 25
+  │      Residual: 10
+  │
+  ├── RiskAssessment
+  │      Periodic
+  │      Inherent: 20
+  │      Residual: 10
+  │
+  └── RiskAssessment
+         Event
+         Inherent: 25
+         Residual: 15    
+    '''
+    risk = models.ForeignKey(
+        Risk,
+        related_name="assessments",
+        on_delete=models.PROTECT,
+    )
+
+    assessment_item = models.OneToOneField(
+        AssessmentItem,
+        related_name="risk_assessment",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
+    assessment_type = models.CharField(
+        max_length=20,
+        choices=RiskAssessmentType.choices,
+    )
+
+    inherent_likelihood = models.PositiveSmallIntegerField(
+        choices=LikelihoodLevel.choices,
+    )
+
+    inherent_impact = models.PositiveSmallIntegerField(
+        choices=ImpactLevel.choices,
+    )
+
+    residual_likelihood = models.PositiveSmallIntegerField(
+        choices=LikelihoodLevel.choices,
+        null=True,
+        blank=True,
+    )
+
+    residual_impact = models.PositiveSmallIntegerField(
+        choices=ImpactLevel.choices,
+        null=True,
+        blank=True,
+    )
+
+    rationale = models.TextField(blank=True)
+
+    assessed_at = models.DateTimeField(auto_now_add=True)
+
+    assessed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    history = HistoricalRecords()
+
+
+#==============================================================================
+class MaturityDimension(models.TextChoices):
+    IMPLEMENTED = "IMPLEMENTED", "Implemented"
+    DOCUMENTED = "DOCUMENTED", "Documented"
+    AUTOMATED = "AUTOMATED", "Automated"
+    REPORTED = "REPORTED", "Reported"
+    TESTED = "TESTED", "Tested"
+    
+#==============================================================================
+class ControlTestStep(TimestampedModel):
+    '''
+Control
+   │
+   ├── TestStep
+   ├── TestStep
+   └── TestStep    
+    '''
+    control = models.ForeignKey(
+        Control,
+        related_name="test_steps",
+        on_delete=models.CASCADE,
+    )
+
+    sequence = models.PositiveIntegerField(default=1)
+
+    title = models.CharField(max_length=200)
+
+    description = models.TextField()
+
+    is_required = models.BooleanField(default=True)
+
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["sequence"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["control", "sequence"],
+                name="unique_control_test_step_sequence",
+            )
+        ]
+        
+#==============================================================================
+class ControlMaturityAssessment(models.Model):
+    '''
+Assessment
+    │
+    └── AssessmentItem
+             │
+             ├── ControlMaturityAssessment
+             │
+             └── ControlTest
+                       │
+                       ├── TestResult
+                       │       └── CollectedArtifact
+                       │
+                       └── TestResult
+                               └── CollectedArtifact    
+    '''
+    assessment_item = models.OneToOneField(
+        AssessmentItem,
+        related_name="maturity_assessment",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
+    # Basic model
+    measure = models.PositiveSmallIntegerField( null=True, blank=True, )
+
+    # Advanced model
+    implemented = models.PositiveSmallIntegerField( null=True, blank=True, )
+    documented = models.PositiveSmallIntegerField( null=True, blank=True, )
+    automated = models.PositiveSmallIntegerField( null=True, blank=True, )
+    reported = models.PositiveSmallIntegerField( null=True, blank=True, )
+
+    comments = models.TextField(blank=True)
+
+    history = HistoricalRecords()
+
+
+#==============================================================================
+class ControlTestConclusion(models.TextChoices):
+    PASS = "PASS", "Pass"
+    FAIL = "FAIL", "Fail"
+    PARTIAL = "PARTIAL", "Partially Effective"
+    NOT_APPLICABLE = "NA", "Not Applicable"
+
+
+#==============================================================================
+class ControlTest(models.Model):
+    assessment_item = models.OneToOneField(
+        AssessmentItem,
+        related_name="control_test",
+        on_delete=models.CASCADE,
+    )
+
+    conclusion = models.CharField(
+        max_length=20,
+        choices=ControlTestConclusion.choices,
+        blank=True,
+    )
+
+    summary = models.TextField(blank=True)
+
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    history = HistoricalRecords()
+    
+
+#==============================================================================
+class TestResultStatus(models.TextChoices):
+    PASS = "PASS", "Pass"
+    FAIL = "FAIL", "Fail"
+    MORE_INFO = "MORE_INFO", "Need more information"
+    NOT_APPLICABLE = "NA", "Not Applicable"
+
+#==============================================================================
+class TestResult(models.Model):
+    '''
+TestResult
+    |
+    +── Artifact
+    +── Artifact    
+    '''
+    control_test = models.ForeignKey(
+        ControlTest,
+        related_name="results",
+        on_delete=models.CASCADE,
+    )
+
+    test_step = models.ForeignKey(
+        ControlTestStep,
+        related_name="results",
+        on_delete=models.PROTECT,
+    )
+
+    result = models.CharField(
+        max_length=20,
+        choices=TestResultStatus.choices,
+    )
+
+    notes = models.TextField(blank=True)
+
+    tested_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    tested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="control_test_results",
+    )
+
+    history = HistoricalRecords()
+
+
+#==============================================================================
+class CollectedArtifact(models.Model):
+    test_result = models.ForeignKey(
+        TestResult,
+        related_name="artifacts",
+        on_delete=models.CASCADE,
+    )
+
+    name = models.CharField(max_length=255)
+
+    description = models.TextField(blank=True)
+
+    file = models.FileField(
+        upload_to="assessment-artifacts/",
+        blank=True,
+        null=True,
+    )
+
+    external_url = models.URLField(
+        blank=True,
+    )
+
+    collected_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    collected_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    history = HistoricalRecords()

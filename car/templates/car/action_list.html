@@ -17,7 +17,7 @@
         <div class="level-right">
 
             <a
-                href="{% url 'action_edit' 0 %}"
+                href="{% url 'car:action_edit' 0 %}"
                 class="button is-primary">
 
                 New Action
@@ -57,7 +57,7 @@
 
                         <td>
                             <a
-                                href="{% url 'action_detail' action.pk %}">
+                                href="{% url 'car:action_detail' action.pk %}">
 
                                 {{ action.action_code }}
 
@@ -116,7 +116,7 @@
                         <td>
 
                             <a
-                                href="{% url 'action_edit' action.pk %}"
+                                href="{% url 'car:action_edit' action.pk %}"
                                 class="button is-small is-light">
 
                                 Edit

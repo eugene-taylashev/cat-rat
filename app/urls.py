@@ -13,8 +13,8 @@ from . import views
 
 urlpatterns = [
     # /
-    path("", include("car.urls")),
-    path("car/", include("car.urls")),
+    path("", include("car.urls", namespace='car-redirect')),
+    path("car/", include("car.urls", namespace='car')),
     path('accounts/', include('django.contrib.auth.urls')),
     path('admin/', admin.site.urls),
 ]

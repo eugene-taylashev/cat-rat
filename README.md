@@ -22,3 +22,94 @@ Auditor - review controls and evidence, perform audit steps
 8. Configure project and app to show custom index page
 9. Configure logon page + admin functions
 10. Create initial tables: Owner, Asset
+
+
+Risk
+ │
+ ├── Initial RiskAssessment
+ │
+ ├── AssessmentItem ── Assessment: Annual Risk Review 2026
+ │       └── RiskAssessment
+ │
+ ├── AssessmentItem ── Assessment: Annual Risk Review 2027
+ │       └── RiskAssessment
+ │
+ └── AssessmentItem ── Assessment: Post-Incident Review
+         └── RiskAssessment
+
+
+Control
+ │
+ ├── ControlMaturityAssessment
+ │       assessment_item = NULL
+ │
+ ├── ControlMaturityAssessment
+ │       assessment_item = #456
+ │
+ └── ControlTest
+         assessment_item = #789		 
+
+
+
+
+                         Assessment
+                             │
+                       AssessmentItem
+                             │
+              ┌──────────────┼───────────────┐
+              │              │               │
+             Risk          Control         Asset
+              │              │
+              │       ┌──────┴──────┐
+              │       │             │
+       RiskAssessment  Maturity     ControlTest
+
+
+Assessment
+    │
+    ├── AssessmentItem → Risk
+    │       └── RiskAssessment
+    │
+    └── AssessmentItem → Control
+            ├── ControlMaturityAssessment
+            └── ControlTest
+                    └── TestResult
+                            └── CollectedArtifact    
+
+
+
+Control
+  └── ControlTestStep
+
+Assessment
+  └── AssessmentItem
+        ├── ControlMaturityAssessment
+        └── ControlTest
+              └── TestResult
+                    └── CollectedArtifact	   
+
+
+CONTROL
+   │
+   │ defines
+   ▼
+TEST STEPS
+   │
+   │ executed during
+   ▼
+CONTROL TEST
+   │
+   │ produces
+   ▼
+TEST RESULTS
+   │
+   │ supported by
+   ▼
+ARTIFACTS
+
+#-----
+CONTROL
+   │
+   │ assessed for
+   ▼
+MATURITY

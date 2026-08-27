@@ -8,28 +8,28 @@
 
 		<div class="column">
 			<div class="box has-text-centered">
-				<a class="heading" href="{% url 'action_list' %}">Actions</a>
+				<a class="heading" href="{% url 'car:action_list' %}">Actions</a>
 				<p class="title">{{ action_count }}</p>
 			</div>
 		</div>
 
 		<div class="column">
 			<div class="box has-text-centered">
-				<a class="heading" href="{% url 'risk_list' %}">Risks</a>
+				<a class="heading" href="{% url 'car:risk_list' %}">Risks</a>
 				<p class="title">{{ risk_count }}</p>
 			</div>
 		</div>
 
 		<div class="column">
 			<div class="box has-text-centered">
-				<a class="heading" href="{% url 'control_list' %}">Controls</a>
+				<a class="heading" href="{% url 'car:control_list' %}">Controls</a>
 				<p class="title">{{ control_count }}</p>
 			</div>
 		</div>
 
 		<div class="column">
 			<div class="box has-text-centered">
-				<a class="heading" href="{% url 'asset_list' %}">Assets</a>
+				<a class="heading" href="{% url 'car:asset_list' %}">Assets</a>
 				<p class="title">{{ asset_count }}</p>
 			</div>
 		</div>
@@ -57,7 +57,7 @@
 			  {% for action in recent_actions %}
 				<tr>
 
-					<td><a href="{% url 'action_edit' action.pk %}">
+					<td><a href="{% url 'car:action_edit' action.pk %}">
 							{{ action.action_code }}
 						</a>
 					</td>
@@ -97,7 +97,7 @@
 
 				<tr>
 
-					<td><a href="{% url 'risk_edit' risk.pk %}">
+					<td><a href="{% url 'car:risk_edit' risk.pk %}">
                         {{ risk.risk_code }}
                     </a>
 					</td>

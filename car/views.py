@@ -325,6 +325,8 @@ def control_edit(request, pk=0):
         "control_edit: request=%s method=%s pk=%s user=%s",
         request, request.method, pk, request.user, )
 
+    settings = AppSettings.get()        #-- Get App settings
+
     is_new = pk == 0
 
     if is_new:
@@ -378,7 +380,7 @@ def control_edit(request, pk=0):
     # ---------------------------------------------------------
         form = ControlForm(instance=control, user=request.user)
 
-    context = {"control": control, "form": form}
+    context = {"control": control, "form": form, "settings": settings}
     return render(request, "car/control_edit.html", context)
 
 

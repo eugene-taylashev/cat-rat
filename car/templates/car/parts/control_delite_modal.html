@@ -19,7 +19,7 @@
 
 	 <!-- Confirm -->
     <footer class="modal-card-foot">
-      <form method="post" action="{% url 'control_delete_confirmed' control.pk %}">
+      <form method="post" action="{% url 'car:control_delete_confirmed' control.pk %}">
         {% csrf_token %}
         <button class="button is-danger is-light" type="submit">Yes, Delete</button>
         <button class="button is-primary is-light" onclick="this.closest('.modal').remove()">Cancel</button>

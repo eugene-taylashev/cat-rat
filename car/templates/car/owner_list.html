@@ -11,7 +11,7 @@
           <tr>
             <th>Team/Person</th>
             <th>Primary Contact
-              <div style="float: right;"><a href="{% url 'owner_edit' 0 %}"><span title="Add new Owner" class="button is-primary">Add Owner +</span></a></div>
+              <div style="float: right;"><a href="{% url 'car:owner_edit' 0 %}"><span title="Add new Owner" class="button is-primary">Add Owner +</span></a></div>
             </th>
           </tr>
         </thead>
@@ -19,7 +19,7 @@
           <tr>
         {% for owner in owner_list %}
             <td style="padding-left: {{ owner.indent }}px;">
-                <a href="{% url 'owner_edit' owner.pk %}">{{ owner.name }}</a>
+                <a href="{% url 'car:owner_edit' owner.pk %}">{{ owner.name }}</a>
             </td>
             <td>{{ owner.primary_contact }}</td>
           </tr><tr>

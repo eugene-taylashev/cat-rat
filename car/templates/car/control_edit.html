@@ -264,33 +264,35 @@
 
 				{% if control.pk %}
 				    <div class="control">
-						<a href="{% url 'control_history' control.pk %}"
+						<a href="{% url 'car:control_history' control.pk %}"
 							class="button is-light">
 							View History
 						</a>
 				    </div>
 				{% endif %}
 
-				<div class="control">
-					<a href="{% url 'control_edit' 0 %}">
-					<span title="Add new Control" class="button is-warning is-light">Add Control +</span></a>
-				</div>
-
 				{% if control.pk %}
 					<div class="control">
 						<button 
 							class="button is-danger is-light"
-							hx-get="{% url 'control_delete' control.pk %}"
+							hx-get="{% url 'car:control_delete' control.pk %}"
 							hx-target="#modal-container"
 							hx-trigger="click"
 							hx-swap="innerHTML"
 						>Delete -</button>
 					</div>
 				{% endif %}
+
+				<div class="control">
+					<a href="{% url 'car:control_edit' 0 %}">
+					<span title="Add new Control" class="button is-warning is-light">Add Control +</span></a>
+				</div>
             </div>
 
         </form>
-
+		{% if settings.control_effectiveness_enabled %}
+			<div>{{ settings.control_effectiveness_enabled }}</div>
+		{% endif %}
     </div>
 
 </div>
