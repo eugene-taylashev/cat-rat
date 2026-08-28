@@ -1,0 +1,59 @@
+	<!-- Control Tabs - same code for all tabs -->
+	<div class="tabs is-boxed">
+      <ul>
+        <li class="{% if tab == 'overview' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:control_detail' control.pk %}?tab=overview"
+                hx-target="#control-tab-content"
+                hx-push-url="true"
+            >
+                Overview
+            </a>
+        </li>
+
+        <li class="{% if tab == 'maturity' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:control_detail' control.pk %}?tab=maturity"
+                hx-target="#control-tab-content"
+                hx-push-url="true"
+            >
+                Maturity
+            </a>
+        </li>
+
+        <li class="{% if tab == 'testing' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:control_detail' control.pk %}?tab=testing"
+                hx-target="#control-tab-content"
+                hx-push-url="true"
+            >
+                Testing
+            </a>
+        </li>
+
+        <li class="{% if tab == 'assessments' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:control_detail' control.pk %}?tab=assessments"
+                hx-target="#control-tab-content"
+                hx-push-url="true"
+            >
+                Assessments
+            </a>
+        </li>
+
+        <li class="{% if tab == 'history' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:control_detail' control.pk %}?tab=history"
+                hx-target="#control-tab-content"
+                hx-push-url="true"
+            >
+                History
+            </a>
+        </li>
+      </ul>
+	</div>
+
+	<!-- Actual tab details, unique for each tab -->
+	<div id="control-tab-content">
+		Control Tab overview
+	</div>

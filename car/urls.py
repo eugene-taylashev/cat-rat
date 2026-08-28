@@ -21,6 +21,7 @@ urlpatterns = [
 
     #-- manage controls
     path("control/", views.control_list, name="control_list"),
+    path("control/<int:pk>/", views.control_detail, name="control_detail"),
     path("control/<int:pk>/edit/", views.control_edit, name="control_edit"),
     path("control/<int:pk>/history/", views.control_history, name="control_history"),
     path("control/<int:pk>/delete/", views.control_delete, name="control_delete"),

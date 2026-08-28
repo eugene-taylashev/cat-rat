@@ -315,6 +315,49 @@ def control_list(request):
 
 
 #==============================================================================
+def control_detail(request, pk):
+    '''
+    View/edit one control by ID/pk or create new with pk=0
+        input: request, primary_key
+        output: rendered HTML page
+    '''
+    logger.debug(
+        "control_detail: request=%s method=%s pk=%s user=%s",
+        request, request.method, pk, request.user, )
+
+    settings = AppSettings.get()        #-- Get App settings
+    control = get_object_or_404(Control, pk=pk)
+    
+    tab = request.GET.get("tab", "overview")
+
+    allowed_tabs = {
+        "overview": "car/parts/control_tab_overview.html",
+        "maturity": "car/parts/control_tab_maturity.html",
+        "testing": "car/parts/control_tab_testing.html",
+        "assessments": "car/parts/control_tab_assessments.html",
+        "history": "car/parts/control_tab_history.html",
+    }
+
+    template = allowed_tabs.get(tab)
+
+    if template is None:
+        tab = "overview"
+        template = allowed_tabs[tab]
+
+    logger.debug(
+        "control_detail: tab to show=%s; %s",
+        tab, template)
+
+    context = {"control": control, "settings": settings, "tab": tab,}
+    
+    if request.headers.get("HX-Request"):
+        return render(request, template, context)
+
+    return render(request, "car/control_detail.html", context)
+
+
+
+#==============================================================================
 def control_edit(request, pk=0):
     '''
     View/edit one control by ID/pk or create new with pk=0
