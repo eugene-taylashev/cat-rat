@@ -599,7 +599,7 @@ class ControlAction(models.Model):
 class AssessmentType(models.TextChoices):
     RISK = "risk", "Risk Assessment"
     CONTROL = "control", "Control Assessment"
-    ANNUAL = "annual", "Annual Assessment"
+    AUDIT = "audit", "Audit/Test of controls"
     OTHER = "other", "Other"
 
 class AssessmentStatus(models.TextChoices):
@@ -631,8 +631,9 @@ Assessment
                             └── CollectedArtifact    
     '''
 
-    assessment_code = models.CharField( max_length=50, unique=True,)
+    assessment_code = models.CharField( max_length=50, unique=True, help_text="human-readable audit identifier",) #i.e. AUDIT-002)
     title = models.CharField( max_length=255,)
+    owner = models.ForeignKey( Owner, related_name="assessments", on_delete=models.PROTECT, blank=True,null=True, help_text="Overall owner for the assessment", )
     assessment_type = models.CharField(max_length=20,choices=AssessmentType.choices,)
     status = models.CharField( max_length=20, choices=AssessmentStatus.choices,
         default=AssessmentStatus.PLANNED, )
@@ -828,6 +829,32 @@ Control
             )
         ]
         
+
+#==============================================================================
+class ControlImplemented(models.IntegerChoices):
+    NOT_IMPLEMENTED = 0, "Not implemented"
+    PARTIALLY_IMPLEMENTED = 1, "Partially implemented"
+    FULLY_IMPLEMENTED = 3, "Fully implemented"
+    VALIDATED_AND_TESTED = 5, "Validated and tested regularly"
+
+class ControlDocumented(models.IntegerChoices):
+    NOT_DOCUMENTED = 0, "Not documented"
+    DRAFT_EXISTS = 1, "Draft exists"
+    REVIEWED_INTERNALLY = 2, "Reviewed internally"
+    APPROVED_AND_MAINTAINED = 3, "Approved and maintained"
+
+class ControlAutomated(models.IntegerChoices):
+    NOT_APPLICABLE = -1, "Not applicable"
+    MANUAL = 0, "Manual"
+    PARTIALLY_AUTOMATED = 1, "Partially automated"
+    MOSTLY_AUTOMATED = 2, "Mostly automated"
+    FULLY_AUTOMATED = 4, "Fully automated"
+
+class ControlReported(models.IntegerChoices):
+    NOT_REPORTED = 0, "Not reported"
+    INFORMAL = 1, "Informal / ad hoc reporting"
+    INTERNAL = 2, "Internal reporting"
+    REGULAR_BUSINESS = 3, "Regular reporting to business"    
 #==============================================================================
 class ControlMaturityAssessment(models.Model):
     '''
@@ -853,18 +880,76 @@ Assessment
         on_delete=models.SET_NULL,
     )
 
-    # Basic model
+    #-- Basic model
     measure = models.PositiveSmallIntegerField( null=True, blank=True, )
 
-    # Advanced model
-    implemented = models.PositiveSmallIntegerField( null=True, blank=True, )
-    documented = models.PositiveSmallIntegerField( null=True, blank=True, )
-    automated = models.PositiveSmallIntegerField( null=True, blank=True, )
-    reported = models.PositiveSmallIntegerField( null=True, blank=True, )
+    #-- Advanced model
+    implemented = models.IntegerField( choices=ControlImplemented.choices, null=True, blank=True, )
+    documented = models.IntegerField( choices=ControlDocumented.choices, null=True, blank=True, )
+    automated = models.IntegerField( choices=ControlAutomated.choices, null=True, blank=True, )
+    reported = models.IntegerField( choices=ControlReported.choices, null=True, blank=True, )
 
     comments = models.TextField(blank=True)
 
     history = HistoricalRecords()
+
+    #-------------------------------
+    @property
+    def control_score(self):
+        """
+        Returns normalized score between 0.0 and 1.0.
+        """
+
+        settings = AppSettings.get()
+
+        if not settings.control_maturity_advanced:
+            if self.measure is None:
+                return None
+
+            # CIS measure 0-5 -> 0.0-1.0
+            return round(self.measure / 5, 2)
+
+        implemented = self.implemented or 0
+        documented = self.documented or 0
+        automated = self.automated or 0
+        reported = self.reported or 0
+
+        if automated > 0:
+            # Maximum score = 15
+            score = (
+                implemented +
+                documented +
+                automated +
+                reported
+            ) / 15
+        else :
+            # Maximum score = 11
+            score = (
+                implemented +
+                documented +
+                reported
+            ) / 11
+            
+        return round(score, 2)
+
+    #-------------------------------
+    @property
+    def maturity_level(self):
+        score = self.control_score
+
+        if score is None:
+            return "Not Assessed"
+
+        if score < 0.25:
+            return "Initial"
+
+        if score < 0.50:
+            return "Basic"
+
+        if score < 0.75:
+            return "Advanced"
+
+        return "Mature"
 
 
 #==============================================================================
@@ -980,3 +1065,44 @@ class CollectedArtifact(models.Model):
     )
 
     history = HistoricalRecords()
+
+#==============================================================================
+class AssessmentControlScope(models.Model):
+    '''
+    Defines Control scope for an assessment
+    Currently: all controls or manually selected
+    '''
+    assessment = models.OneToOneField(
+        Assessment,
+        related_name="control_scope",
+        on_delete=models.CASCADE,
+    )
+
+    include_all = models.BooleanField(default=False)
+
+    controls = models.ManyToManyField(
+        Control,
+        blank=True,
+        related_name="assessment_scopes",
+    )
+
+
+#==============================================================================
+class AssessmentRiskScope(models.Model):
+    '''
+    Defines Risk scope for an assessment
+    Currently: all controls or manually selected
+    '''
+    assessment = models.OneToOneField(
+        Assessment,
+        related_name="risk_scope",
+        on_delete=models.CASCADE,
+    )
+
+    include_all = models.BooleanField(default=False)
+
+    risks = models.ManyToManyField(
+        Risk,
+        blank=True,
+        related_name="assessment_scopes",
+    )    

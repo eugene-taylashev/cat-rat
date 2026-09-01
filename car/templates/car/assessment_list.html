@@ -1,0 +1,35 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<script>document.title = "{{ ptitle }}";</script>
+    <div class="container">
+      <h1 class="title">List of Assessments</h1>
+
+      <table class="table is-striped is-hoverable is-fullwidth">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Title
+              <div style="float: right;"><a href="{% url 'car:assessment_edit' 0 %}"><span title="Add new Assessment" class="button is-primary">Add Assessment +</span></a></div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+        {% for assess in assess_list %}
+            <td><a href="{% url 'car:assessment_edit' assess.pk %}">{{ assess.assessment_code }}</a></td>
+            <td>{{ assess.assessment_type }}</td>
+            <td>{{ assess.status }}</td>
+            <td>{{ assess.title }}</td>
+          </tr><tr>
+        {% empty %}
+            <td colspan="4">There are currently no assessments.</td>
+        {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+{% endblock %}

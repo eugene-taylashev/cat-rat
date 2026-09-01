@@ -4,34 +4,38 @@
 
 <div class="container">
 
-    <div class="level">
-
-        <div class="level-left">
-
-            <div>
-
-                <p class="subtitle">
-                    {{ control.control_label }}
-                </p>
-
-                <p class="subtitle">
-                    {{ control.title }}
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="level-right control">
-            <a href="{% url 'car:control_edit' control.pk %}" class="button is-light">Edit</a>
-        </div>
-
-		<div class="level-right control">
-			<a href="{% url 'car:control_list' %}" class="button is-light">Back to Controls</a>
-		</div>
-
-    </div>
+    <table class="table is-fullwidth">
+		<tr>
+			<td class="content">{{ control.control_label }}</td>
+			<td class="content">{{ control.title }}</td>
+			<td class="level-right control">
+				<a href="{% url 'car:control_edit' control.pk %}" class="button is-light">Edit</a>
+				<a href="{% url 'car:control_list' %}" class="button is-light">Back to Controls</a>
+			</td>
+		</tr>
+		<tr>
+			<td class="content">
+				<label class="label">Owner</label>{{ control.owner }}
+			</td>
+			<td class="content">
+				<label class="label">Asset</label>{{ control.asset }}
+			</td>
+			<td class="content">
+				<label class="label">Status</label>{{ control.status }}
+			</td>
+		</tr>
+		<tr>
+			<td class="content">
+				<label class="label">Maturity</label>{{ latest_maturity.measure | default:"not assessed" }}
+			</td>
+			<td class="content">
+				<label class="label">Last Test</label>
+			</td>
+			<td class="content">
+				<label class="label">Open Actions</label>
+			</td>
+		</tr>
+	</table>
 
 	<div id="control-tab-content">
 		{% include "car/parts/control_tab_overview.html" %}

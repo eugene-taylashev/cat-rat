@@ -611,3 +611,95 @@ class ActionForm(forms.ModelForm):
         logger.debug("ActionForm.clean() completed")
 
         return cleaned_data        
+        
+#==============================================================================
+class AssessmentForm(forms.ModelForm):
+
+    class Meta:
+        model = Assessment
+
+        fields = [
+            "assessment_code",
+            "title",
+            "owner",
+            "assessment_type",
+            "status",
+            "start_date",
+            "due_date",
+            "description",
+        ]
+
+        widgets = {
+            "assessment_code": forms.TextInput(
+                attrs={
+                    "class": "input",
+                    "placeholder": "e.g. AUD-002",
+                    'style': 'width: 150px;',
+                }
+            ),
+
+            "title": forms.TextInput(
+                attrs={
+                    "class": "input",
+                    "placeholder": "Assessment/Audit title",
+                }
+            ),
+
+            "description": forms.Textarea(
+                attrs={
+                    "class": "textarea",
+                    "rows": 6,
+                    "placeholder": "Provide assessment details...",
+                }
+            ),
+
+            "start_date": forms.DateInput(
+                attrs={"type": "date"}
+            ),
+            "due_date": forms.DateInput(
+                attrs={"type": "date"}
+            ),
+            "description": forms.Textarea(
+                attrs={"rows": 4}
+            ),
+        }
+
+#==============================================================================
+class AssessmentControlScopeForm(forms.ModelForm):
+
+    class Meta:
+        model = AssessmentControlScope
+
+        fields = [
+            "include_all",
+            "controls",
+        ]
+
+        widgets = {
+            "controls": forms.SelectMultiple(
+                attrs={
+                    "size": 12,
+                }
+            ),
+        }
+
+
+#==============================================================================
+class AssessmentRiskScopeForm(forms.ModelForm):
+
+    class Meta:
+        model = AssessmentRiskScope
+
+        fields = [
+            "include_all",
+            "risks",
+        ]
+
+        widgets = {
+            "risks": forms.SelectMultiple(
+                attrs={
+                    "size": 12,
+                }
+            ),
+        }
+

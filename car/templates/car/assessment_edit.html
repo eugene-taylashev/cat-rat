@@ -1,0 +1,259 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<section class="section">
+
+    <div class="level">
+        <div class="level-left">
+            <div>
+                <h1 class="title">
+                    {% if assessment %}
+                        Edit Assessment
+                    {% else %}
+                        New Assessment
+                    {% endif %}
+                </h1>
+
+                {% if assessment %}
+                    <p class="subtitle">
+                        {{ assessment.assessment_code }}
+                    </p>
+                {% endif %}
+				<div style="display: inline-block; float: right;">
+					<a href="{% url 'car:assessment_edit' 0 %}"><span title="Add new Assessment" class="button is-primary">Add Assessment +</span></a>
+				</div>
+            </div>
+        </div>
+
+        <div class="level-right">
+            <a
+                href="{% url 'car:assessment_list' %}"
+                class="button is-light"
+            >
+                Back
+            </a>
+        </div>
+    </div>
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <div class="box">
+
+            <div class="columns">
+
+                <div class="column is-half">
+
+                    <div class="field">
+                        <label class="label">
+                            Assessment Code
+                        </label>
+
+                        <div class="control">
+                            {{ form.assessment_code }}
+                        </div>
+
+                        {{ form.assessment_code.errors }}
+                    </div>
+
+                </div>
+
+                <div class="column is-half">
+
+                    <div class="field">
+                        <label class="label">
+                            Title
+                        </label>
+
+                        <div class="control">
+                            {{ form.title }}
+                        </div>
+
+                        {{ form.title.errors }}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="columns">
+
+                <div class="column">
+
+                    <div class="field">
+                        <label class="label">
+                            Owner
+                        </label>
+
+                        <div class="control">
+                            {{ form.owner }}
+                        </div>
+
+                        {{ form.owner.errors }}
+                    </div>
+
+                </div>
+
+                <div class="column">
+
+                    <div class="field">
+                        <label class="label">
+                            Assessment Type
+                        </label>
+
+                        <div class="control">
+                            {{ form.assessment_type }}
+                        </div>
+
+                        {{ form.assessment_type.errors }}
+                    </div>
+
+                </div>
+
+                <div class="column">
+
+                    <div class="field">
+                        <label class="label">
+                            Status
+                        </label>
+
+                        <div class="control">
+                            {{ form.status }}
+                        </div>
+
+                        {{ form.status.errors }}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="columns">
+
+                <div class="column">
+
+                    <div class="field">
+                        <label class="label">
+                            Start Date
+                        </label>
+
+                        <div class="control">
+                            {{ form.start_date }}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="column">
+
+                    <div class="field">
+                        <label class="label">
+                            Due Date
+                        </label>
+
+                        <div class="control">
+                            {{ form.due_date }}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="field">
+
+                <label class="label">
+                    Description
+                </label>
+
+                <div class="control">
+                    {{ form.description }}
+                </div>
+
+            </div>
+
+        </div>
+
+<div class="box">
+
+    <h2 class="title is-5">
+        Assessment Scope
+    </h2>
+
+    {% if scope_form %}
+
+        <div class="field">
+
+            <label class="checkbox">
+				<input
+					type="checkbox"
+					name="include_all"
+					id="id_include_all"
+				>
+				Include all active elements
+            </label>
+
+        </div>
+
+        <div class="field">
+
+            <label class="label">
+                {% if assessment.assessment_type == "risk" %}
+                    Risks
+                {% else %}
+                    Controls
+                {% endif %}
+            </label>
+
+            <div class="control">
+                {{ scope_form.controls }}
+                {{ scope_form.risks }}
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <p class="has-text-grey">
+            This assessment type does not have
+            a predefined scope.
+        </p>
+
+    {% endif %}
+
+</div>
+            <!-- Record history  info -->
+            <table class="table">
+              <tr>
+				<td class="content is-small"><strong>Record created by</strong> {{ assessment.created_by|default:"admin" }}
+				  <strong>on</strong> {{ assessment.created_at|default:"unknown" }}</td>
+				<td class="content is-small"><strong>Updated by</strong> {{ assessment.updated_by|default:"admin" }}
+				  <strong>on</strong> {{ assessment.updated_at|default:"unknown" }}</td>
+			  </tr>
+			</table>
+
+        <div class="buttons">
+
+            <button
+                type="submit"
+                class="button is-primary"
+            >
+                Save
+            </button>
+
+            <a
+                href="{% url 'car:assessment_list' %}"
+                class="button"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}
