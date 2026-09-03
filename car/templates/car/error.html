@@ -1,0 +1,64 @@
+{% extends "car/base.html" %}
+
+{% block title %}
+Woops!
+{% endblock %}
+
+{% block content %}
+
+<section class="section">
+
+    <div class="container">
+
+        <div class="columns is-centered">
+
+            <div class="column is-half">
+
+                <div class="notification is-danger is-light">
+
+                    <h1 class="title">
+                        Woops!
+                    </h1>
+
+                    <p class="mb-4">
+                        Something went wrong while processing your request.
+                    </p>
+
+                    {% if error_message %}
+                        <div class="content">
+                            <strong>Details:</strong>
+                            <br>
+                            {{ error_message }}
+                        </div>
+                    {% endif %}
+
+                    <div class="buttons mt-5">
+
+                        <a
+                            href="javascript:history.back();"
+                            class="button is-primary is-light"
+                        >
+                            Go Back
+                        </a>
+
+                        <a
+                            href="{% url 'car:main' %}"
+                            class="button is-light"
+                        >
+                            Home
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
+```

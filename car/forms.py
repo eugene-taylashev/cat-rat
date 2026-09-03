@@ -648,19 +648,16 @@ class AssessmentForm(forms.ModelForm):
             "description": forms.Textarea(
                 attrs={
                     "class": "textarea",
-                    "rows": 6,
+                     "rows": 4,
+                    "style": 'width: 350px;',
                     "placeholder": "Provide assessment details...",
                 }
             ),
-
             "start_date": forms.DateInput(
                 attrs={"type": "date"}
             ),
             "due_date": forms.DateInput(
                 attrs={"type": "date"}
-            ),
-            "description": forms.Textarea(
-                attrs={"rows": 4}
             ),
         }
 

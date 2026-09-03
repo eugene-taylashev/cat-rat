@@ -1,55 +1,51 @@
-{% extends "car/base.html" %}
-{% block content %}
-{% load static %}
+	<!-- Assessment Tabs - same code for all tabs -->
+	<div class="tabs is-boxed">
+      <ul>
+        <li class="{% if tab == 'main' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=main"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Main
+            </a>
+        </li>
 
-<div class="container">
+        <li class="{% if tab == 'scope' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=scope"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Scope
+            </a>
+        </li>
 
-    <!-- ========================================================= -->
-    <!-- Page Header                                                -->
-    <!-- ========================================================= -->
+        <li class="{% if tab == 'progress' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=progress"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Progress
+            </a>
+        </li>
 
-    <div class="level mb-5">
+        <li class="{% if tab == 'history' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=history"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                History
+            </a>
+        </li>
+      </ul>
+	</div>
 
-        <div class="level-left">
-            <div>
-                <h1 class="title">
-                    Control History
-                </h1>
-
-                <p class="subtitle">
-                    <strong>{{ control.control_label }}</strong>
-                    {% if control.title %}
-                        — {{ control.title }}
-                    {% endif %}
-                </p>
-            </div>
-        </div>
-
-        <div class="level-right">
-
-            <div class="buttons">
-
-                <a
-                    href="{% url 'car:control_edit' control.pk %}"
-                    class="button is-primary"
-                >
-                    Edit Control
-                </a>
-
-                <a
-                    href="{% url 'car:control_list' %}"
-                    class="button is-light"
-                >
-                    Back to Controls
-                </a>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
+	<!-- Actual tab details, unique for each tab -->
+	<div id="assessment-tab-content"  class="box">
+		<h2 class="title is-5">Assessment History</h2>
     <!-- ========================================================= -->
     <!-- History                                                    -->
     <!-- ========================================================= -->
@@ -221,12 +217,10 @@
     {% else %}
 
         <div class="notification is-light">
-            No historical records found for this control.
+            No historical records found for this assessment.
         </div>
 
     {% endif %}
 
-</div>
-
-{% endblock %}
-
+	</div>
+	

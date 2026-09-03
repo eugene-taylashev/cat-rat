@@ -258,7 +258,7 @@ class Control(TimestampedModel):
 
     #----------------------------
     def __str__(self):
-        return self.description
+        return f"{self.control_label} - {self.title[:80]}"
 
     #----------------------------
     def clean(self):
@@ -600,7 +600,7 @@ class AssessmentType(models.TextChoices):
     RISK = "risk", "Risk Assessment"
     CONTROL = "control", "Control Assessment"
     AUDIT = "audit", "Audit/Test of controls"
-    OTHER = "other", "Other"
+    OTHER = "other", "Other"        # AssessmentItems manually created
 
 class AssessmentStatus(models.TextChoices):
     PLANNED = "planned", "Planned"
@@ -616,25 +616,14 @@ class AssessmentItemStatus(models.TextChoices):
     NOT_APPLICABLE = "not_applicable", "Not Applicable"
 
 #==============================================================================
-class Assessment(models.Model):
+class Assessment(TimestampedModel):
     '''
-
-Assessment
-    │
-    ├── AssessmentItem → Risk
-    │       └── RiskAssessment
-    │
-    └── AssessmentItem → Control
-            ├── ControlMaturityAssessment
-            └── ControlTest
-                    └── TestResult
-                            └── CollectedArtifact    
+    Describe assessment as a list of actual tasks
     '''
-
     assessment_code = models.CharField( max_length=50, unique=True, help_text="human-readable audit identifier",) #i.e. AUDIT-002)
     title = models.CharField( max_length=255,)
-    owner = models.ForeignKey( Owner, related_name="assessments", on_delete=models.PROTECT, blank=True,null=True, help_text="Overall owner for the assessment", )
-    assessment_type = models.CharField(max_length=20,choices=AssessmentType.choices,)
+    owner = models.ForeignKey( Owner, related_name="assessments", on_delete=models.PROTECT, blank=True,null=True, help_text="Overall Assessment Owner", )
+    assessment_type = models.CharField(max_length=20,choices=AssessmentType.choices, help_text="Important: The assessment type cannot be easily changed after creation. Your assessment scope will be based on the selected type (Risks or Controls).",)
     status = models.CharField( max_length=20, choices=AssessmentStatus.choices,
         default=AssessmentStatus.PLANNED, )
 
@@ -664,6 +653,18 @@ class AssessmentItem(models.Model):
     '''
     AssessmentItem = work management
     Concept: "Somebody has been assigned to perform this assessment."
+    The snapshot of what was actually assessed
+
+Assessment
+    │
+    ├── AssessmentItem → Risk
+    │       └── RiskAssessment
+    │
+    └── AssessmentItem → Control
+            ├── ControlMaturityAssessment
+            └── ControlTest
+                    └── TestResult
+                            └── CollectedArtifact    
     '''
     assessment = models.ForeignKey( Assessment, related_name="items", on_delete=models.CASCADE, )
 
@@ -704,6 +705,17 @@ class AssessmentItem(models.Model):
                 name="assessment_item_one_target",
             ),
         ]     
+
+    #-----
+    @property
+    def target_name(self):
+        if self.control:
+            return str(self.control)
+
+        if self.risk:
+            return str(self.risk)
+
+        return "Unknown"
 
 
 #==============================================================================
@@ -855,6 +867,7 @@ class ControlReported(models.IntegerChoices):
     INFORMAL = 1, "Informal / ad hoc reporting"
     INTERNAL = 2, "Internal reporting"
     REGULAR_BUSINESS = 3, "Regular reporting to business"    
+
 #==============================================================================
 class ControlMaturityAssessment(models.Model):
     '''
@@ -1070,6 +1083,7 @@ class CollectedArtifact(models.Model):
 class AssessmentControlScope(models.Model):
     '''
     Defines Control scope for an assessment
+    The scope acts as the selection criteria
     Currently: all controls or manually selected
     '''
     assessment = models.OneToOneField(
@@ -1091,6 +1105,7 @@ class AssessmentControlScope(models.Model):
 class AssessmentRiskScope(models.Model):
     '''
     Defines Risk scope for an assessment
+    The scope acts as the selection criteria
     Currently: all controls or manually selected
     '''
     assessment = models.OneToOneField(

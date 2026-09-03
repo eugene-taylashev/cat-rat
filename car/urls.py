@@ -43,8 +43,11 @@ urlpatterns = [
     #-- assessments / audits
     path("assessment/", views.assessment_list, name="assessment_list"),
     path("assessment/<int:pk>/edit", views.assessment_edit, name="assessment_edit"),
+    path("assessment/<int:pk>/scope", views.assessment_scope, name="assessment_scope"),
+    
 
     #-- Other
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("error/", views.error_page, name="error_page"),
     
 ]

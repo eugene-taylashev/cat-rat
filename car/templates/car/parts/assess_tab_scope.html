@@ -1,0 +1,122 @@
+	<!-- Assessment Tabs - same code for all tabs -->
+	<div class="tabs is-boxed">
+      <ul>
+        <li class="{% if tab == 'main' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=main"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Main
+            </a>
+        </li>
+
+        <li class="{% if tab == 'scope' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=scope"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Scope
+            </a>
+        </li>
+
+        <li class="{% if tab == 'progress' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=progress"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Progress
+            </a>
+        </li>
+
+        <li class="{% if tab == 'history' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=history"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                History
+            </a>
+        </li>
+      </ul>
+	</div>
+
+	<!-- Actual tab details, unique for each tab -->
+	{% if assessment.is_new %}
+        <div class="box">
+			<div class="notification">
+				<button class="delete"></button>
+				Before managing the scope, save the new assessment using the <strong>Main</strong> tab.
+			</div>		
+		</div>
+	{% else %}
+	<form
+		hx-post="{% url 'car:assessment_scope' assessment.pk %}"
+		hx-target="#assessment-tabs"
+	>
+
+		{% csrf_token %}
+
+        <div class="box">
+
+			<h2 class="title is-5">Assessment Scope</h2>
+
+			{% if current_items == 0 %}
+			<div class="notification">
+				<button class="delete"></button>
+				No controls or risks are currently in scope. Select the scope and click "Save Scope" to generate assessment actions. Actions will be assigned to the corresponding control or risk owners. Once created, only an <strong>Administrator</strong> can modify the generated actions.
+			</div>		
+			{% else %}
+			<div class="notification">
+				<button class="delete"></button>
+				The scope for this assessment has been defined. Assessment actions have been generated and assigned to the corresponding control or risk owners. To modify the scope or generated actions, please contact an <strong>Administrator</strong>.
+			</div>		
+			
+			{% endif %}
+
+				{% if scope_form %}
+				<div class="field">
+
+					<label class="checkbox">
+						{{ scope_form.include_all }} Include all active elements 
+						<span class="help">(total {{ total_items }} items)</span>
+					</label>
+
+				</div>
+
+			<div class="field">
+
+				<label class="label">
+					{% if assessment.assessment_type == "risk" %}
+						Risks
+					{% else %}
+						Controls
+					{% endif %}
+				</label>
+
+				<div class="control">
+					{{ scope_form.controls }}
+					{{ scope_form.risks }}
+				</div>
+
+			</div>
+
+			{% else %}
+
+				<div class="notification">
+					<button class="delete"></button>
+					This assessment type does not have a predefined scope. Contact <strong>Administrator</strong>
+				</div>
+
+			{% endif %}
+
+		</div>
+
+		{% if current_items == 0 %}
+			<button	type="submit" class="button is-primary is-light">Save Scope</button>
+		{% endif %}
+
+	</form>	
+	{% endif %}

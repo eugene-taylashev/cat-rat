@@ -1,0 +1,129 @@
+	<!-- Assessment Tabs - same code for all tabs -->
+	<div class="tabs is-boxed">
+      <ul>
+        <li class="{% if tab == 'main' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=main"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Main
+            </a>
+        </li>
+
+        <li class="{% if tab == 'scope' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=scope"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Scope
+            </a>
+        </li>
+
+        <li class="{% if tab == 'progress' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=progress"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Progress
+            </a>
+        </li>
+
+        <li class="{% if tab == 'history' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=history"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                History
+            </a>
+        </li>
+      </ul>
+	</div>
+
+	<!-- Actual tab details, unique for each tab -->
+<div class="box">
+
+    <h2 class="title is-5">
+        Assessment Progress
+    </h2>
+
+	<div class="field">
+        <div>Assessment Items total: {{ total_items }}</div>
+	</div>
+	<div class="chart-container" style="position: relative; width: 300px;">
+		<canvas id="progressChart"></canvas>
+	</div>
+<script>
+
+new Chart(
+    document.getElementById('progressChart'),
+    {
+        type: 'doughnut',
+
+        data: {
+            labels: [
+                'Completed Items',
+                'In Progress Items',
+                'Not Started Items',
+            ],
+
+            datasets: [{
+                label: 'Assessment Progress',
+
+                data: [
+                    {{ progress_chart.Completed_Items }},
+                    {{ progress_chart.In_Progress_Items }},
+                    {{ progress_chart.Not_Started_Items }},
+                ]
+            }]
+        }
+    }
+);
+</script>
+    <div class="table-container">
+
+        <table class="table is-fullwidth">
+
+            <thead>
+
+                <tr>
+                    <th>Item</th>
+                    <th>Owner</th>
+                    <th>Status</th>
+					<th>Assigned</th>
+					<th>Completed</th>
+				</tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for item in items %}
+
+                <tr>
+                    <td>{{ item.target_name }}</td>
+                    <td>{{ item.owner }}</td>
+                    <td>{{ item.get_status_display }}</td>
+					<td>{{ item.assigned_at|date:"Y-m-d" }}</td>
+					<td>{{ item.completed_at|date:"Y-m-d" }}</td>
+                </tr>
+
+            {% empty %}
+
+                <tr>
+                    <td colspan="5" class="has-text-centered">
+                            No assessment items found.
+                    </td>
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+</div>
+	

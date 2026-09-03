@@ -1,0 +1,9 @@
+    <!-- Record history  info -->
+    <table class="table">
+        <tr>
+			<td class="content is-small"><strong>Record created by</strong> {{ rec_history.created_by|default:"admin" }}
+				  <strong>on</strong> {{ rec_history.created_at|default:"unknown" }}</td>
+			<td class="content is-small"><strong>Updated by</strong> {{ rec_history.updated_by|default:"admin" }}
+				  <strong>on</strong> {{ rec_history.updated_at|default:"unknown" }}</td>
+		</tr>
+	</table>

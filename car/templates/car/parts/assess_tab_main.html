@@ -1,0 +1,200 @@
+	<!-- Assessment Tabs - same code for all tabs -->
+	<div class="tabs is-boxed">
+      <ul>
+        <li class="{% if tab == 'main' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=main"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Main
+            </a>
+        </li>
+
+        <li class="{% if tab == 'scope' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=scope"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Scope
+            </a>
+        </li>
+
+        <li class="{% if tab == 'progress' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=progress"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                Progress
+            </a>
+        </li>
+
+        <li class="{% if tab == 'history' %}is-active{% endif %}">
+            <a
+                hx-get="{% url 'car:assessment_edit' assessment.pk %}?tab=history"
+                hx-target="#assessment-tabs"
+                hx-push-url="true"
+            >
+                History
+            </a>
+        </li>
+      </ul>
+	</div>
+
+	<!-- Actual tab details, unique for each tab -->
+    <form method="post">
+
+        {% csrf_token %}
+
+        <div class="box">
+
+            <div class="columns">
+
+                <div class="column is-one-quarter">
+                    <div class="field">
+                        <label class="label">
+                            Assessment Code
+							{% if form.assessment_code.field.required %}
+								<span class="has-text-danger">*</span>
+							{% endif %}
+                        </label>
+                        <div class="control">{{ form.assessment_code }}</div>
+
+						{% if form.assessment_code.help_text %}
+						    <p class="help">{{ form.assessment_code.help_text }}</p>
+						{% endif %}
+                        {{ form.assessment_code.errors }}
+                    </div>
+                </div>
+
+                <div class="column is-three-quarters">
+                    <div class="field">
+                        <label class="label">
+                            Title
+							{% if form.title.field.required %}
+								<span class="has-text-danger">*</span>
+							{% endif %}
+                        </label>
+
+                        <div class="control">{{ form.title }}</div>
+
+						{% if form.title.help_text %}
+						    <p class="help">{{ form.title.help_text }}</p>
+						{% endif %}
+                        {{ form.title.errors }}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="columns">
+
+                <div class="column">
+
+                    <div class="field">
+                        <label class="label">
+                            Assessment Type
+							{% if form.assessment_type.field.required %}
+								<span class="has-text-danger">*</span>
+							{% endif %}
+                        </label>
+
+                        <div class="control">{{ form.assessment_type }}</div>
+
+						{% if form.assessment_type.help_text %}
+						    <p class="help">{{ form.assessment_type.help_text }}</p>
+						{% endif %}
+                        {{ form.assessment_type.errors }}
+                    </div>
+
+                </div>
+
+                <div class="column">
+
+                    <div class="field">
+                        <label class="label">
+                            Owner
+							{% if form.owner.field.required %}
+								<span class="has-text-danger">*</span>
+							{% endif %}
+                        </label>
+
+                        <div class="control">{{ form.owner }}</div>
+
+						{% if form.owner.help_text %}
+						    <p class="help">{{ form.owner.help_text }}</p>
+						{% endif %}
+                        {{ form.owner.errors }}
+                    </div>
+
+                </div>
+
+                <div class="column">
+
+                    <div class="field">
+                        <label class="label">
+                            Status
+                        </label>
+
+                        <div class="control">{{ form.status }}</div>
+
+                        {{ form.status.errors }}
+                    </div>
+
+                </div>
+
+                <div class="column">
+
+                    <div class="field">
+                        <label class="label">
+                            Start Date
+                        </label>
+
+                        <div class="control">
+                            {{ form.start_date }}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="column">
+
+                    <div class="field">
+                        <label class="label">
+                            Due Date
+                        </label>
+
+                        <div class="control">
+                            {{ form.due_date }}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="field">
+
+                <label class="label">
+                    Description
+                </label>
+
+                <div class="control">
+                    {{ form.description }}
+                </div>
+            </div>
+
+			{% include "car/parts/history_info.html" %}
+
+        </div>
+
+        <div class="buttons">
+            <button type="submit" class="button is-primary is-light">Save</button>
+            <a href="{% url 'car:assessment_list' %}" class="button is-light">Cancel</a>
+        </div>
+
+    </form>
+
+	

@@ -1,5 +1,6 @@
 from django.http import HttpResponseRedirect, HttpResponse              # type: ignore
 from django.views.decorators.http import require_POST              # type: ignore
+from django.urls import reverse
 from django.shortcuts import render, Http404, redirect, get_object_or_404    # type: ignore
 from django.db.models import Count, Q       # type: ignore
 from django.contrib.auth.decorators import login_required   # type: ignore
@@ -10,6 +11,7 @@ import logging
 
 from .models import *
 from .forms import *
+from .services import *
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +85,9 @@ def main(request):
     return render(request, "car/main.html", context,)
 
 
-
+#==============================================================================
+def error_page(request):
+    return render( request, "car/error.html")
 
 #==============================================================================
 def owner_list(request):
@@ -96,7 +100,6 @@ def owner_list(request):
     context = {"owner_list": owner_list, "ptitle": "Your owners"}
     logger.debug("owner_list: accessing by %s", request.user)
     return render(request, "car/owner_list.html", context)
-
 
 
 #==============================================================================
@@ -178,10 +181,19 @@ def owner_edit(request, pk=0):
     else:
         form = OwnerForm(instance=owner)
         formset = OwnerMembershipFormSet(instance=owner)
+
+        #-- Record history shows who and when created/updated the record 
+        rec_history = { 
+            "created_by": owner.created_by,
+            "created_at": owner.created_at,
+            "updated_by": owner.updated_by,
+            "updated_at": owner.updated_at,
+        }
         logger.debug("owner_edit: accessing owner pk=%s by %s", owner.pk, request.user)
 
 
-    context = {"owner": owner, "form": form, "formset": formset, "is_new": is_new, "ptitle": "Owner: %s" % owner.name}
+    context = {"owner": owner, "form": form, "formset": formset, "rec_history": rec_history, 
+        "is_new": is_new, "ptitle": "Owner: %s" % owner.name}
     return render(request, "car/owner_edit.html", context)
 
 
@@ -296,8 +308,16 @@ def asset_edit(request, pk=0):
     # GET
     # ---------------------------------------------------------
         form = AssetForm(instance=asset)
+        #-- Record history shows who and when created/updated the record 
+        rec_history = { 
+            "created_by": asset.created_by,
+            "created_at": asset.created_at,
+            "updated_by": asset.updated_by,
+            "updated_at": asset.updated_at,
+        }
 
-    context = {"asset": asset, "form": form, "ptitle": "Asset: %s" % asset.name} #, "can_edit": can_edit
+
+    context = {"asset": asset, "form": form, "rec_history": rec_history, "ptitle": "Asset: %s" % asset.name} #, "can_edit": can_edit
     return render(request, "car/asset_edit.html", context)
 
 
@@ -341,6 +361,7 @@ def control_detail(request, pk):
         .first()
     )
     
+    #-- Tab variables
     tab = request.GET.get("tab", "overview")
 
     allowed_tabs = {
@@ -367,7 +388,6 @@ def control_detail(request, pk):
         return render(request, template, context)
 
     return render(request, "car/control_detail.html", context)
-
 
 
 #==============================================================================
@@ -436,7 +456,15 @@ def control_edit(request, pk=0):
     # ---------------------------------------------------------
         form = ControlForm(instance=control, user=request.user)
 
-    context = {"control": control, "form": form, "settings": settings}
+        #-- Record history shows who and when created/updated the record 
+        rec_history = { 
+            "created_by": control.created_by,
+            "created_at": control.created_at,
+            "updated_by": control.updated_by,
+            "updated_at": control.updated_at,
+        }
+
+    context = {"control": control, "form": form, "rec_history": rec_history, "settings": settings}
     return render(request, "car/control_edit.html", context)
 
 
@@ -605,7 +633,15 @@ def risk_edit(request, pk=0):
     # ---------------------------------------------------------
         form = RiskForm( instance=risk )
 
-    context = {"risk": risk, "form": form, "is_new": is_new,}
+        #-- Record history shows who and when created/updated the record 
+        rec_history = { 
+            "created_by": risk.created_by,
+            "created_at": risk.created_at,
+            "updated_by": risk.updated_by,
+            "updated_at": risk.updated_at,
+        }
+
+    context = {"risk": risk, "form": form, "rec_history": rec_history, "is_new": is_new,}
     return render(request, "car/risk_edit.html", context)
 
 
@@ -732,6 +768,7 @@ def action_detail(request, pk):
         }
     )    
 
+
 #==============================================================================
 @login_required
 def action_list(request):
@@ -812,6 +849,7 @@ def action_complete(request, pk):
         pk=action.pk
     )
 
+
 #==============================================================================
 @login_required
 @require_POST
@@ -838,8 +876,9 @@ def action_reopen(request, pk):
         pk=action.pk
     )
 
-@login_required
+
 #==============================================================================
+@login_required
 def dashboard(request):
     '''
     Dashboard with all KPIs for overall review:
@@ -988,7 +1027,8 @@ def assessment_list(request):
 #==============================================================================
 def assessment_edit(request, pk=0):
     '''
-    View/edit one assessment by ID/pk or create new with pk=0
+    Main function to manage view or edit activity for one assessment 
+    by ID/pk or create new with pk=0
 Create Assessment
        ↓
 Define Scope
@@ -1011,185 +1051,174 @@ Complete Assessment
         "assessment_edit: request=%s method=%s pk=%s user=%s",
         request, request.method, pk, request.user, )
 
-    control_scope = None
-    risk_scope = None
-
     is_new = pk == 0
+
     if is_new:
-    # ---------------------------------------------------------
-    # CREATE new Assessment
-    # ---------------------------------------------------------
+        # ---------------------------------------------------------
+        # CREATE new Assessment
+        # ---------------------------------------------------------
         assessment = Assessment()
-        logger.debug("assessment_edit: creating new assessment by %s", request.user)
+        assessment.is_new = True
+        assessment.pk = 0 #-- Change from None to 0, will reverse in POST
+        logger.debug("assessment_edit: created new assessment by %s", request.user)
 
     else:
-    # ---------------------------------------------------------
-    # EDIT existing Assessment and existing scope
-    # ---------------------------------------------------------
+        # ---------------------------------------------------------
+        # Get existing Assessment
+        # ---------------------------------------------------------
         assessment = get_object_or_404(Assessment, pk=pk)
+        assessment.is_new = False
         logger.debug( "assessment_edit: found object for assessment pk=%s", assessment.pk)
 
-        if assessment.assessment_type in [
-            AssessmentType.CONTROL,
-            AssessmentType.AUDIT,
-        ]:
-            control_scope = getattr(
-                assessment,
-                "control_scope",
-                None,
-            )
-            logger.debug( "assessment_edit: assessment type is CONTROL related")
+    if request.method == "GET":
+        # ---------------------------------------------------------
+        # GET for all tabs
+        # ---------------------------------------------------------
 
-        elif assessment.assessment_type == AssessmentType.RISK:
-            risk_scope = getattr(
-                assessment,
-                "risk_scope",
-                None,
-            )
-            logger.debug( "assessment_edit: assessment type is RISK related")
+        #-- Check Tab variables
+        tab = request.GET.get("tab", "main")
 
+        allowed_tabs = {
+            "main": "car/parts/assess_tab_main.html",
+            "scope": "car/parts/assess_tab_scope.html",
+            "progress": "car/parts/assess_tab_progress.html",
+            "history": "car/parts/assess_tab_history.html",
+        }
+
+        template = allowed_tabs.get(tab)
+
+        if template is None:
+            tab = "main"
+            template = allowed_tabs[tab]
+
+        logger.debug("assessment_edit: tab to show=%s; %s",tab, template)
+
+        #-- Switch based on tab
+        if tab == "scope":
+            return assessment_out_scope(request, assessment, tab, template)
+        elif tab == "progress":
+            return assessment_out_progress(request, assessment, tab, template)
+        elif tab == "history":
+            return assessment_out_history(request, assessment, tab, template)
         else:
-            logger.debug( "assessment_edit: assessment type is OTHER")
-            
-    if request.method == "POST":
-    # ---------------------------------------------------------
-    # POST
-    # ---------------------------------------------------------
-        logger.debug( "POST data: %s", request.POST )
+            return assessment_out_main(request, assessment, tab, template)
 
+    elif request.method == "POST":
+        # ---------------------------------------------------------
+        # POST
+        # ---------------------------------------------------------
+        logger.debug( "assessment_edit: POST data is: %s", request.POST )
+
+        if assessment.pk == 0:
+            assessment.pk = None #-- Chnage back to none
         form = AssessmentForm( request.POST, instance=assessment, )
         logger.debug("assessment_edit: updating assessment pk=%s by %s", assessment.pk, request.user)
-
-
-        # We need the proposed assessment type.
-        assessment_type = request.POST.get( "assessment_type" )
-
-        if assessment_type in [
-            AssessmentType.CONTROL,
-            AssessmentType.AUDIT,
-        ]:
-            control_scope = ( getattr(assessment, "control_scope", None)
-                if assessment
-                else None
-            )
-
-            scope_form = AssessmentControlScopeForm( request.POST, instance=control_scope, )
-            logger.debug("assessment_edit: in POST assessment type is CONTROL")
-                
-
-        elif assessment_type == AssessmentType.RISK:
-
-            risk_scope = ( getattr(assessment, "risk_scope", None)
-                if assessment
-                else None
-            )
-
-        else:
-            scope_form = None
-            logger.debug("assessment_edit: in POST assessment type is OTHER")
 
         # -------------------------------------
         # Validate
         # -------------------------------------
         if form.is_valid():
-            logger.debug( "AssessmentForm is valid. AssessmentForm.cleaned_data=%s", form.cleaned_data, )
-            forms_valid = True
-        else:
-            forms_valid = False
-
-        if scope_form:
-            forms_valid = (
-                forms_valid
-                and scope_form.is_valid()
-            )
-            logger.debug("assessment_edit: in POST assessment forms are valid")
-
-        if forms_valid:
-
-            with transaction.atomic():
-
-                assessment = form.save()
-
-                if isinstance( scope_form, AssessmentControlScopeForm, ):
-                    scope = scope_form.save( commit=False )
-
-                    scope.assessment = assessment
-                    scope.save()
-
-                    scope_form.save_m2m()
-                    logger.debug("assessment_edit: in POST CONTROL formes saved")
-
-                elif isinstance( scope_form, AssessmentRiskScopeForm, ):
-                    scope = scope_form.save( commit=False )
-
-                    scope.assessment = assessment
-                    scope.save()
-
-                    scope_form.save_m2m()
-                    logger.debug("assessment_edit: in POST RISK formes saved")
-
-                else:
-                    scope_form = None
-                    logger.debug("assessment_edit: in POST form OTHER is NOT saved")
+            logger.debug( "assessment_edit: Form is valid. cleaned_data=%s", form.cleaned_data, )
+            assessment = form.save()
+            assessment.save(user=request.user)
 
             messages.success(
-                request, "Assessment created successfully."
-                if is_new
-                else "Assessment updated successfully."
+                request, "Assessment saved successfully."
             )
-
-            #return redirect("car:assessment_edit",pk=assessment.pk)
-            return HttpResponseRedirect( f"/car/assessment/", preserve_request=False)
 
         else:
             logger.error( "AssessmentForm validation failed")
             logger.error( "Form errors: %s", form.errors)
             logger.error( "Form errors as JSON: %s", form.errors.as_json() )
             logger.error( "Non-field errors: %s", form.non_field_errors())
-            logger.error( "FormSet errors: %s", formset.errors)
-            logger.error( "FormSet errors as JSON: %s", formset.errors.as_json() )
-            logger.error( "Non-field errors: %s", formset.non_field_errors())
+            return render(request, "car/error.html", {"error_message": f"Could not valideate the form: {form.errors}"},)
+            messages.error(request,)
+        return redirect("car:assessment_edit",pk=assessment.pk)
 
-
-    # ---------------------------------------------------------
-    # GET
-    # ---------------------------------------------------------
     else:
-        form = AssessmentForm(instance=assessment)
-        logger.debug("assessment_edit: accessing assessment pk=%s by %s", assessment.pk, request.user)
+        # ---------------------------------------------------------
+        # Impossible condition
+        # ---------------------------------------------------------
+        return render(request, "car/error.html", {"error_message": "Abnormal request type in assessment_edit",},)
 
-        if assessment:
-        
-            if assessment.assessment_type in [
-                AssessmentType.CONTROL,
-                AssessmentType.AUDIT,
-            ]:
-                scope = (
-                    AssessmentControlScope.objects
-                    .filter(assessment=assessment)
-                    .first()
-                )
-
-                scope_form = AssessmentControlScopeForm( instance=scope, )
-                logger.debug("assessment_edit: in GET form OTHER")
-
-            elif assessment.assessment_type == AssessmentType.RISK:
-                scope = (
-                    AssessmentRiskScope.objects
-                    .filter(assessment=assessment)
-                    .first()
-                )
-
-                scope_form = AssessmentRiskScopeForm( instance=scope, )
-
-            else:
-                scope_form = None
-                logger.debug("assessment_edit: in GET form OTHER")
-        else:
-            logger.debug("assessment_edit: Wrong!!! assessment is not defined")
-            
-    context = {"assessment": assessment, "form": form, "scope_form": scope_form, "is_new": is_new}
-    return render(request, "car/assessment_edit.html", context)
+    return redirect( "car:main")
 
 
+#==============================================================================
+@require_POST
+def assessment_scope(request, pk=0):
+    '''
+    Update Scope for the specific Assessment
+        input: request, assessment primary_key
+        output: rendered HTML page
+    '''
+    scope_form = None
+    scope = None
+
+    assessment = get_object_or_404(Assessment, pk=pk)
+    logger.debug( "assessment_scope: found object for assessment pk=%s", assessment.pk)
+
+    # -------------------------------------
+    # Scope for CONTROLs
+    # -------------------------------------
+    if assessment.assessment_type in [
+        AssessmentType.CONTROL,
+        AssessmentType.AUDIT,
+    ]:
+        control_scope = ( getattr(assessment, "control_scope", None)
+            if assessment
+            else None
+        )
+
+        scope_form = AssessmentControlScopeForm( request.POST, instance=control_scope, )
+        logger.debug("assessment_scope: assessment type is CONTROL")
+
+    # -------------------------------------
+    # Scope for RISKs
+    # -------------------------------------
+    elif assessment.assessment_type == AssessmentType.RISK:
+        risk_scope = ( getattr(assessment, "risk_scope", None)
+            if assessment
+            else None
+        )
+        scope_form = AssessmentRiskScope( request.POST, instance=risk_scope, )
+        logger.debug("assessment_scope: assessment type is CONTROL")
+
+
+    # -------------------------------------
+    # Scope for OTHER. TBD== Add functionality
+    # -------------------------------------
+    else:
+        scope_form = None
+        logger.debug("assessment_scope: assessment type is OTHER")
+
+    # -------------------------------------
+    # Validate
+    # -------------------------------------
+    if scope_form.is_valid():
+        logger.debug( "AssessmentXxxScope is valid. cleaned_data=%s", scope_form.cleaned_data, )
+
+        with transaction.atomic():
+            scope = scope_form.save( commit=False )
+
+            scope.assessment = assessment
+            scope.save()
+
+            scope_form.save_m2m()
+            logger.debug("assessment_scope: form saved")
+
+        initialize_assessment(assessment)
+        messages.success(
+            request, "Assessment scope saved successfully."
+        )
+
+        return redirect("car:assessment_edit",pk=assessment.pk)
+        #return HttpResponseRedirect( f"/car/assessment/", preserve_request=False)
+
+    else:
+        logger.error( "Scope_form errors: %s", scope_form.errors)
+        logger.error( "Scope_form errors as JSON: %s", scope_form.errors.as_json() )
+        logger.error( "Non-field errors: %s", scope_form.non_field_errors())
+
+    return redirect( "car:main")
     
