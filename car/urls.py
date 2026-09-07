@@ -44,10 +44,16 @@ urlpatterns = [
     path("assessment/", views.assessment_list, name="assessment_list"),
     path("assessment/<int:pk>/edit", views.assessment_edit, name="assessment_edit"),
     path("assessment/<int:pk>/scope", views.assessment_scope, name="assessment_scope"),
+    path("audit/", views.assess_item_list, name="assess_item_list"),
+    path("audit/<int:pk>/edit/", views.assess_item_edit, name="assess_item_edit"),
+    path("audit/<int:pk>/completed/", views.assess_item_completed, name="assess_item_completed"),
+    path("audit/<int:pk>/not_applicable/", views.assess_item_not_applicable, name="assess_item_not_applicable"),
     
+
 
     #-- Other
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("settings/", views.settings_edit, name="settings_edit"),
     path("error/", views.error_page, name="error_page"),
     
 ]

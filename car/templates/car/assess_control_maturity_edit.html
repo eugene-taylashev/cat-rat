@@ -1,0 +1,231 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<script>document.title = "CAR: {{ ptitle }}";</script>
+  <div class="container">
+
+    <div class="level">
+        <div class="level-left">
+                <h1 class="title">{{ ptitle }}</h1>
+        </div>
+
+        <div class="level-right">
+            <a href="{% url 'car:assess_item_list' %}" class="button is-light">Back</a>
+        </div>
+    </div>
+
+	{% include "car/parts/assessment_item_header.html" %}
+	<div class="box">
+		<div class="block">
+			<strong>Control:</strong>
+            <a href="{% url 'car:control_edit' item.control.pk %}">
+			{{ item.control.control_label }}</a>
+            — {{ item.control.title }}
+		</div>
+	  <details>
+		<summary class="has-text-weight-semibold">
+			Control Details
+		</summary>
+
+		<div class="content mt-4">
+			<strong>Description:</strong>
+			<p>{{ item.control.description }}</p>
+		</div>
+		<div class="columns">
+
+			<div class="column">
+				<strong>Asset:</strong>
+				{{ item.control.asset }}
+			</div>
+			<div class="column">
+				<strong>Owner:</strong>
+				{{ item.control.owner }}
+			</div>
+			<div class="column">
+				<strong>Status:</strong>
+				{{ item.control.status }}
+			</div>
+			<div class="column">
+				<strong>Security Function:</strong>
+				{{ item.control.sec_function }}
+			</div>
+		
+		</div>
+	  </details>
+        <form method="post">
+
+            {% csrf_token %}
+			<div class="block">
+				<h5 class="title is-5">Maturity</h4>
+					
+				<!-- Advance maturity measurements -->
+				<div class="columns {% if not settings.control_maturity_advanced %}is-hidden{% endif %}">
+					<div class="column">
+						<label class="label">{{ form.implemented.label }}
+							{% if form.implemented.field.required %}
+								<span class="has-text-danger">*</span>
+							{% endif %}
+						</label>
+						<div class="control">{{ form.implemented }}</div>
+						{% if form.implemented.help_text %}
+							<p class="help">{{ form.implemented.help_text }}</p>
+						{% endif %}
+						{% for error in form.implemented.errors %}
+							<p class="help is-danger">{{ error }}</p>
+						{% endfor %}
+					</div>
+
+					<div class="column">
+						<label class="label">{{ form.documented.label }}
+							{% if form.documented.field.required %}
+								<span class="has-text-danger">*</span>
+							{% endif %}
+						</label>
+						<div class="control">{{ form.documented }}</div>
+						{% if form.documented.help_text %}
+							<p class="help">{{ form.documented.help_text }}</p>
+						{% endif %}
+						{% for error in form.documented.errors %}
+							<p class="help is-danger">{{ error }}</p>
+						{% endfor %}
+					</div>
+
+					<div class="column">
+						<label class="label">{{ form.automated.label }}
+							{% if form.automated.field.required %}
+								<span class="has-text-danger">*</span>
+							{% endif %}
+						</label>
+						<div class="control">{{ form.automated }}</div>
+						{% if form.automated.help_text %}
+							<p class="help">{{ form.automated.help_text }}</p>
+						{% endif %}
+						{% for error in form.automated.errors %}
+							<p class="help is-danger">{{ error }}</p>
+						{% endfor %}
+					</div>
+
+					<div class="column">
+						<label class="label">{{ form.reported.label }}
+							{% if form.reported.field.required %}
+								<span class="has-text-danger">*</span>
+							{% endif %}
+						</label>
+						<div class="control">{{ form.reported }}</div>
+						{% if form.reported.help_text %}
+							<p class="help">{{ form.reported.help_text }}</p>
+						{% endif %}
+						{% for error in form.reported.errors %}
+							<p class="help is-danger">{{ error }}</p>
+						{% endfor %}
+					</div>
+
+				</div>
+
+				<!-- Simple CIS Measure -->
+				<div class="fieldd {% if settings.control_maturity_advanced %}is-hidden{% endif %}">
+
+					<label class="label">{{ form.measure.label }}</label>
+					<div class="control">{{ form.measure }}</div>
+					{% if form.measure.help_text %}
+						<p class="help">{{ form.measure.help_text }}</p>
+					{% endif %}
+
+					{% for error in form.measure.errors %}
+						<p class="help is-danger">{{ error }}</p>
+					{% endfor %}
+
+				</div>
+				<!-- Calculated maturity level -->
+				{% if maturity.maturity_level %}
+					<div class="block"><strong>Maturity Level:</strong> {{ maturity.maturity_level }}</div>
+				{% endif %}
+
+			</div>
+			<!-- Control effectiveness -->
+			{% if settings.control_effectiveness_enabled %}
+			<div class="block">
+				<h5 class="title is-5">Effectiveness</h4>
+
+				<div class="columns">
+					<div class="column">
+						<label class="label">
+							{% if form.is_operating.help_text %}
+								{{ form.is_operating.help_text }}
+							{% else %}
+								{{ form.is_operating.label }}
+							{% endif %}
+						</label>
+						<div class="control">{{ form.is_operating }}</div>
+						{% for error in form.is_operating.errors %}
+							<p class="help is-danger">{{ error }}</p>
+						{% endfor %}
+					</div>
+
+					<div class="column">
+						<label class="label">
+							{% if form.is_producing.help_text %}
+								{{ form.is_producing.help_text }}
+							{% else %}
+								{{ form.is_producing.label }}
+							{% endif %}
+						</label>
+						<div class="control">{{ form.is_producing }}</div>
+						{% for error in form.is_producing.errors %}
+							<p class="help is-danger">{{ error }}</p>
+						{% endfor %}
+					</div>
+
+				</div>
+
+			</div>
+			{% endif %}
+
+			<!-- Comments -->
+            <div class="field">
+
+                <label class="label">{{ form.comments.label }}</label>
+                <div class="control">{{ form.comments }}</div>
+
+                {% if form.comments.help_text %}
+                    <p class="help">{{ form.comments.help_text }}</p>
+                {% endif %}
+
+                {% for error in form.comments.errors %}
+                    <p class="help is-danger">{{ error }}</p>
+                {% endfor %}
+
+            </div>
+	
+            <!-- Buttons -->
+            <div class="field is-grouped mt-5">
+
+                <div class="control">
+                    <button type="submit" class="button is-light">Save Draft</button>
+                </div>
+
+			    <div class="control">
+					<button 
+						class="button is-primary is-light"
+						hx-post="{% url 'car:assess_item_completed' item.pk %}"
+					>Complete Assessment</button>
+			    </div>
+
+				<div class="control">
+					<button 
+						class="button is-danger is-light"
+						hx-post="{% url 'car:assess_item_not_applicable' item.pk %}"
+					>Mark not applicable</button>
+				</div>
+
+				<div class="control">
+					<a  class="button is-warning is-light" href="{% url 'car:assess_item_list' %}">
+					Cancel</a>
+				</div>
+            </div>
+
+        </form>
+	</div>
+  </div>
+{% endblock %}

@@ -1,0 +1,41 @@
+<div class="box">
+
+	<div class="block">
+		<strong>Assessment: </strong>
+		<a href="{% url 'car:assessment_edit' item.assessment.pk %}">
+			{{ item.assessment.assessment_code }}</a>
+			- {{ item.assessment.title }}
+	</div>
+    <div class="columns">
+        <div class="column">
+            <strong>Type:</strong>
+            {{ item.get_item_type_display }}
+        </div>
+
+        <div class="column">
+            <strong>Assigned:</strong>
+            {{ item.assigned_at|date:"Y-m-d" }}
+        </div>
+
+        <div class="column">
+            <strong>Status:</strong>
+            {{ item.get_status_display }}
+        </div>
+    </div>
+    <p>
+            {% if item.risk %}
+                <strong>Risk:</strong>
+                <a href="{% url 'car:risk_edit' item.risk.pk %}">
+				{{ item.risk.risk_label }}</a>
+                — {{ item.risk.title }}
+            {% elif item.control %}
+                <strong>Control:</strong>
+                <a href="{% url 'car:control_edit' item.control.pk %}">
+				{{ item.control.control_label }}</a>
+                — {{ item.control.title }}
+            {% endif %}
+    </p>
+
+	
+
+</div>

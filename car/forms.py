@@ -7,6 +7,52 @@ from .models import *
 logger = logging.getLogger(__name__)
 
 #==============================================================================
+class AppSettingsForm(forms.ModelForm):
+
+    class Meta:
+        model = AppSettings
+
+        fields = [
+            "control_maturity_advanced",
+            "control_effectiveness_enabled",
+            "risk_auto_calculation",
+            "risk_matrix_size",
+            "default_risk_review_months",
+            "risk_acceptance_threshold",
+            "high_risk_threshold",
+            "critical_risk_threshold",
+        ]
+        widgets = {
+            "default_risk_review_months": forms.TextInput(
+                attrs={
+                    "class": "input",
+                }
+            ),
+            "risk_matrix_size": forms.TextInput(
+                attrs={
+                    "class": "input",
+                }
+            ),
+            "risk_acceptance_threshold": forms.TextInput(
+                attrs={
+                    "class": "input",
+                }
+            ),
+            "high_risk_threshold": forms.TextInput(
+                attrs={
+                    "class": "input",
+                }
+            ),
+            "critical_risk_threshold": forms.TextInput(
+                attrs={
+                    "class": "input",
+                }
+            ),
+        }
+
+
+
+#==============================================================================
 class OwnerForm(forms.ModelForm):
     class Meta:
         model = Owner
@@ -699,4 +745,98 @@ class AssessmentRiskScopeForm(forms.ModelForm):
                 }
             ),
         }
+
+
+#==============================================================================
+class RiskAssessmentForm(forms.ModelForm):
+
+    class Meta:
+        model = RiskAssessment
+
+        fields = [
+            "risk",
+            "assessment_type",
+        ]
+
+
+#==============================================================================
+class ControlMaturityAssessmentForm(forms.ModelForm):
+
+    class Meta:
+        model = ControlMaturityAssessment
+
+        fields = [
+            "measure",
+            "implemented",
+            "documented",
+            "automated",
+            "reported",
+            "comments",
+            "is_operating",
+            "is_producing",
+        ]
+
+        labels = {
+            "measure":"Measure",
+            "implemented":"Is implemented?",
+            "documented":"Is documented?",
+            "automated":"Is automated?",
+            "reported":"Is reported?",
+            "is_operating":"Is operating?",
+            "is_producing":"Is producing?",
+            "comments":"Comments",
+        }
+
+        widgets = {
+            "measure": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+            "implemented": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+            "documented": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+            "automated": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+            "reported": forms.Select(
+                attrs={
+                    "class": "select",
+                }
+            ),
+            "comments": forms.Textarea(
+                attrs={
+                    "class": "textarea",
+                     "rows": 4,
+                    "style": 'width: 350px;',
+                    "placeholder": "Provide assessment details...",
+                }
+            ),
+        }
+
+#==============================================================================
+class ControlTestForm(forms.ModelForm):
+
+    class Meta:
+        model = ControlTest
+
+        fields = [
+            "assessment_item",
+            "conclusion",
+            "summary",
+            "started_at",
+            "completed_at",
+        ]
+
+
+
 

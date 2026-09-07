@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 from simple_history.models import HistoricalRecords
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -68,21 +69,29 @@ class AppSettings(TimestampedModel):
     '''
     
     #-- Control params
-    control_maturity_advanced = models.BooleanField(
-        default=False,
-        help_text="Enable advanced control maturity assessment (implementation, automation, reporting, documentation)."
+    control_maturity_advanced = models.BooleanField( default=False,
+        help_text="Enable advanced control maturity assessment (implementation, automation, reporting, documentation).When disabled, use CIS measure"
     )
-    control_effectiveness_enabled = models.BooleanField( default=True )
+    control_effectiveness_enabled = models.BooleanField( default=False,
+        help_text="Enable control effectiveness assessments (operating as intended, producing the expected outcome)."
+    )
+
     control_testing_required = models.BooleanField( default=True )
     default_control_review_months = models.PositiveIntegerField( default=12 )
 
     #-- Risk params
-    risk_auto_calculation = models.BooleanField( default=True )
-    default_risk_review_months = models.PositiveIntegerField( default=12 )
-    risk_matrix_size = models.PositiveSmallIntegerField( default=5 )  # 3x3 or 5x5
-    risk_acceptance_threshold = models.PositiveSmallIntegerField( default=6 )
-    high_risk_threshold = models.PositiveSmallIntegerField( default=12 )
-    critical_risk_threshold = models.PositiveSmallIntegerField( default=20 )
+    risk_auto_calculation = models.BooleanField( default=True,
+        help_text="Automatically calculate the risk rating based on likelihood and impact values. When disabled, risk ratings must be entered manually.", )
+    default_risk_review_months = models.PositiveIntegerField( default=12,
+        help_text="Default interval, in months, between required risk reviews. Used when calculating the next review date for newly created risks." )
+    risk_matrix_size = models.PositiveSmallIntegerField( default=5,
+        help_text="Size of the risk matrix used for assessments. Common values are 3 (3×3 matrix) and 5 (5×5 matrix). This setting determines the available likelihood and impact scales." )  # 3x3 or 5x5
+    risk_acceptance_threshold = models.PositiveSmallIntegerField( default=6,
+        help_text="Maximum risk rating that may be accepted without requiring additional treatment. Risks above this threshold should be reviewed for mitigation." )
+    high_risk_threshold = models.PositiveSmallIntegerField( default=12,
+        help_text="Minimum risk rating classified as High. Risks at or above this value should receive management attention and have a documented treatment plan." )
+    critical_risk_threshold = models.PositiveSmallIntegerField( default=20,
+        help_text="Minimum risk rating classified as Critical. Risks at or above this value require immediate attention and escalation to senior management." )
 
     #-- Actions and Remediation
     action_overdue_warning_days = models.PositiveIntegerField( default=14 )
@@ -608,13 +617,6 @@ class AssessmentStatus(models.TextChoices):
     COMPLETED = "completed", "Completed"
     CANCELLED = "cancelled", "Cancelled"
 
-class AssessmentItemStatus(models.TextChoices):
-    NOT_STARTED = "not_started", "Not Started"
-    ASSIGNED = "assigned", "Assigned"
-    IN_PROGRESS = "in_progress", "In Progress"
-    COMPLETED = "completed", "Completed"
-    NOT_APPLICABLE = "not_applicable", "Not Applicable"
-
 #==============================================================================
 class Assessment(TimestampedModel):
     '''
@@ -647,6 +649,13 @@ class AssessmentItemType(models.TextChoices):
     RISK = "RISK", "Risk Assessment"
     CONTROL_MATURITY = "CONTROL_MATURITY", "Control Maturity"
     CONTROL_TEST = "CONTROL_TEST", "Control Test"
+
+class AssessmentItemStatus(models.TextChoices):
+    NOT_STARTED = "not_started", "Not Started"
+    ASSIGNED = "assigned", "Assigned"
+    IN_PROGRESS = "in_progress", "In Progress"
+    COMPLETED = "completed", "Completed"
+    NOT_APPLICABLE = "not_applicable", "Not Applicable"
 
 #==============================================================================
 class AssessmentItem(models.Model):
@@ -756,34 +765,34 @@ Risk
     assessment_item = models.OneToOneField(
         AssessmentItem,
         related_name="risk_assessment",
-        null=True,
-        blank=True,
+        null=True, blank=True,
         on_delete=models.SET_NULL,
     )
 
     assessment_type = models.CharField(
         max_length=20,
         choices=RiskAssessmentType.choices,
+        blank=True,
     )
 
     inherent_likelihood = models.PositiveSmallIntegerField(
         choices=LikelihoodLevel.choices,
+        null=True, blank=True,
     )
 
     inherent_impact = models.PositiveSmallIntegerField(
         choices=ImpactLevel.choices,
+        null=True, blank=True,
     )
 
     residual_likelihood = models.PositiveSmallIntegerField(
         choices=LikelihoodLevel.choices,
-        null=True,
-        blank=True,
+        null=True, blank=True,
     )
 
     residual_impact = models.PositiveSmallIntegerField(
         choices=ImpactLevel.choices,
-        null=True,
-        blank=True,
+        null=True, blank=True,
     )
 
     rationale = models.TextField(blank=True)
@@ -843,6 +852,14 @@ Control
         
 
 #==============================================================================
+class CISMeasure(models.IntegerChoices):
+    NOT_IMPLEMENTED = 0, "Not Implemented"
+    VERY_LOW = 1, "Very Low"
+    LOW = 2, "Low"
+    MODERATE = 3, "Moderate"
+    HIGH = 4, "High"
+    FULLY_IMPLEMENTED = 5, "Fully Implemented"
+
 class ControlImplemented(models.IntegerChoices):
     NOT_IMPLEMENTED = 0, "Not implemented"
     PARTIALLY_IMPLEMENTED = 1, "Partially implemented"
@@ -893,14 +910,27 @@ Assessment
         on_delete=models.SET_NULL,
     )
 
-    #-- Basic model
-    measure = models.PositiveSmallIntegerField( null=True, blank=True, )
+    #-- Basic measure model (CIS related)
+    measure = models.PositiveSmallIntegerField(
+        choices=CISMeasure.choices, 
+        default=0,
+        help_text="Rate the extent to which this control is implemented and operating effectively.",  )
 
-    #-- Advanced model
+    #-- Advanced measure model
     implemented = models.IntegerField( choices=ControlImplemented.choices, null=True, blank=True, )
     documented = models.IntegerField( choices=ControlDocumented.choices, null=True, blank=True, )
     automated = models.IntegerField( choices=ControlAutomated.choices, null=True, blank=True, )
     reported = models.IntegerField( choices=ControlReported.choices, null=True, blank=True, )
+    
+    #-- Control effectiveness
+    is_operating = models.BooleanField(
+        default=False,
+        help_text="Is the control operating as intended?"
+    )
+    is_producing = models.BooleanField(
+        default=False,
+        help_text="Is the control producing the expected outcome?"
+    )
 
     comments = models.TextField(blank=True)
 

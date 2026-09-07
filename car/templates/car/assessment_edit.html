@@ -2,7 +2,7 @@
 {% block content %}
 {% load static %}
 
-<script>document.title = "{{ ptitle }}";</script>
+<script>document.title = "CAR: {{ ptitle }}";</script>
 
 <section class="section">
 
@@ -10,11 +10,7 @@
         <div class="level-left">
             <div>
                 <h1 class="title">
-                    {% if assessment %}
-                        Edit Assessment
-                    {% else %}
-                        New Assessment
-                    {% endif %}
+                    {{ ptitle }}
                 </h1>
 
             </div>

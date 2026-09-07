@@ -1,0 +1,22 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<script>document.title = "CAR: {{ ptitle }}";</script>
+  <div class="container">
+
+    <div class="level">
+        <div class="level-left">
+                <h1 class="title">{{ ptitle }}</h1>
+        </div>
+
+        <div class="level-right">
+            <a href="{% url 'car:assess_item_list' %}" class="button is-light">Back</a>
+        </div>
+    </div>
+
+	{% include "car/parts/assessment_item_header.html" %}
+
+
+  </div>
+{% endblock %}

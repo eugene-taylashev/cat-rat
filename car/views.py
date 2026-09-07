@@ -3,7 +3,7 @@ from django.views.decorators.http import require_POST              # type: ignor
 from django.urls import reverse
 from django.shortcuts import render, Http404, redirect, get_object_or_404    # type: ignore
 from django.db.models import Count, Q       # type: ignore
-from django.contrib.auth.decorators import login_required   # type: ignore
+from django.contrib.auth.decorators import login_required, user_passes_test   # type: ignore
 from django.contrib import messages
 from django.db import transaction
 import logging
@@ -88,6 +88,65 @@ def main(request):
 #==============================================================================
 def error_page(request):
     return render( request, "car/error.html")
+
+#==============================================================================
+@login_required
+@user_passes_test(
+    lambda u: user_in_group(u, "Admin")
+)
+def settings_edit(request):
+    '''
+    Edit/View application settings
+    Need to be in group of Administrators
+        input: request
+        output: rendered HTML page
+    '''
+    settings = AppSettings.get()        #-- Get App settings
+    logger.debug(
+        "settings_edit: request=%s, method=%s, user=%s",
+        request, request.method, request.user, )
+
+    if request.method == 'POST':
+    # ---------------------------------------------------------
+    # POST
+    # ---------------------------------------------------------
+        logger.debug( "POST data: %s", request.POST )
+        
+        form = AppSettingsForm(request.POST, instance=settings)
+        logger.debug("asset_edit: updating settings by %s", request.user)
+
+        if form.is_valid():
+            logger.debug( "AppSettingsForm valid. cleaned_data=%s", form.cleaned_data )
+            settings.save(user=request.user)
+            logger.debug( "Settings saved: %s", settings )
+
+            messages.success( request, "Settings have updated successfully." )
+
+            return HttpResponseRedirect( f"/car/settings/", preserve_request=False) #-- Is this a good choice?
+
+        else:
+            logger.error( "AppSettingsForm validation failed")
+            logger.error( "Form errors: %s", form.errors)
+            logger.error( "Form errors as JSON: %s", form.errors.as_json() )
+            logger.error( "Non-field errors: %s", form.non_field_errors())
+
+    else:
+    # ---------------------------------------------------------
+    # GET
+    # ---------------------------------------------------------
+        form = AppSettingsForm(instance=settings)
+        #-- Record history shows who and when created/updated the record 
+        rec_history = { 
+            "created_by": settings.created_by,
+            "created_at": settings.created_at,
+            "updated_by": settings.updated_by,
+            "updated_at": settings.updated_at,
+        }
+
+
+    context = {"settings": settings, "form": form, "rec_history": rec_history, "ptitle": "Application settings"} #, "can_edit": can_edit
+    return render(request, "car/settings_edit.html", context)
+
 
 #==============================================================================
 def owner_list(request):
@@ -1133,6 +1192,7 @@ Complete Assessment
             logger.error( "Non-field errors: %s", form.non_field_errors())
             return render(request, "car/error.html", {"error_message": f"Could not valideate the form: {form.errors}"},)
             messages.error(request,)
+
         return redirect("car:assessment_edit",pk=assessment.pk)
 
     else:
@@ -1181,7 +1241,7 @@ def assessment_scope(request, pk=0):
             if assessment
             else None
         )
-        scope_form = AssessmentRiskScope( request.POST, instance=risk_scope, )
+        scope_form = AssessmentRiskScopeForm( request.POST, instance=risk_scope, )
         logger.debug("assessment_scope: assessment type is CONTROL")
 
 
@@ -1221,4 +1281,91 @@ def assessment_scope(request, pk=0):
         logger.error( "Non-field errors: %s", scope_form.non_field_errors())
 
     return redirect( "car:main")
+
+
+#==============================================================================
+@login_required
+def assess_item_list(request):
+    '''
+    List AssessmentItems assigned to user/owner
+        input: request
+        output: rendered HTML page
+    '''
+    settings = AppSettings.get()        #-- Get App settings
+
+    item_list = (
+        AssessmentItem.objects
+        .filter(owner__users=request.user)
+        .select_related(
+            "risk",
+            "control",
+        )
+        .order_by("assigned_at")
+    )
+    logger.debug("assess_item_list: selected %s items", item_list.count())
+    context = {"item_list": item_list, "ptitle": "Your assessment tasks"}
+    return render(request, "car/assess_item_list.html", context)
+
+
+#==============================================================================
+@login_required
+def assess_item_edit(request, pk, status=''):
+    '''
+    Edit one AssessmentItem
+
+Assessment
+    │
+    ├── AssessmentItem → Risk
+    │       └── RiskAssessment
+    │
+    └── AssessmentItem → Control
+            ├── ControlMaturityAssessment
+            └── ControlTest
+                    └── TestResult
+                            └── CollectedArtifact    
+
+
+        input: request, primary_key
+        output: rendered HTML page
+    '''
+    logger.debug("assess_item_edit: selected AssessmentItem.pk=%s, status=%s", pk, status)
+    item = get_object_or_404(
+        AssessmentItem.objects.select_related(
+            "assessment",
+            "risk",
+            "control",
+            "owner",
+        ),
+        pk=pk,
+#        owner__users=request.user,
+    )
+
+    ASSESSMENT_EDITORS = {
+        AssessmentItemType.RISK: assess_risk_edit,
+        AssessmentItemType.CONTROL_MATURITY: assess_maturity_edit,
+        AssessmentItemType.CONTROL_TEST: assess_control_test_edit,
+    }
     
+    editor = ASSESSMENT_EDITORS.get(item.item_type)
+    
+    if not editor:
+        # ---------------------------------------------------------
+        # Impossible condition
+        # ---------------------------------------------------------
+        return render(request, "car/error.html", {"error_message": "Abnormal assessment type in assess_item_edit",},)
+
+    return editor(request, item, status)
+
+
+#==============================================================================
+@require_POST
+def assess_item_completed(request, pk):
+    logger.debug("assess_item_completed: need AssessmentItem.pk=%s, ", pk)
+    return assess_item_edit(request, pk, 'completed')
+
+
+#==============================================================================
+@require_POST
+def assess_item_not_applicable(request, pk):
+    logger.debug("assess_item_not_applicable: need AssessmentItem.pk=%s, ", pk)
+    return assess_item_edit(request, pk, 'not_applicable')

@@ -1,0 +1,62 @@
+{% extends "car/base.html" %}
+{% block content %}
+{% load static %}
+
+<script>document.title = "CAR: {{ ptitle }}";</script>
+<div class="container">
+
+    <div class="level">
+        <div class="level-left">
+                <h1 class="title">{{ ptitle }}</h1>
+        </div>
+
+        <div class="level-right">
+            <a href="{% url 'car:assess_item_list' %}" class="button is-light">Back</a>
+        </div>
+    </div>
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <form method="post">
+
+            {% csrf_token %}
+
+			{% for fld in form %}
+				<div class="field">
+
+					<label class="label">{{ fld.label }}</label>
+					<div class="control">{{ fld }}</div>
+					{% if fld.help_text %}
+					<p class="help">{{ fld.help_text }}</p>
+					{% endif %}
+
+					{% for error in fld.errors %}
+                    <p class="help is-danger">
+                        {{ error }}
+                    </p>
+					{% endfor %}
+
+				</div>
+
+			{% endfor %}
+
+			{% include "car/parts/history_info.html" %}
+
+            <!-- Buttons -->
+            <div class="field is-grouped mt-5">
+
+                <div class="control">
+                    <button type="submit" class="button is-primary is-light">Save</button>
+                </div>
+
+				<div class="control">
+					<a  class="button is-warning is-light" href="{% url 'car:main' %}">
+					Cancel</a>
+				</div>
+            </div>
+
+        </form>
+  </div>
+{% endblock %}

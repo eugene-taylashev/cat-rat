@@ -4,11 +4,23 @@ from django.shortcuts import render, redirect, get_object_or_404    # type: igno
 from django.db.models import Count, Q       # type: ignore
 from django.contrib import messages
 from django.db import transaction
+from django.utils import timezone
 
 from .models import *
 from .forms import *
 
 logger = logging.getLogger(__name__)
+
+#==============================================================================
+def user_in_group(user, group_name):
+    '''
+    Checks if user is member of group_name
+    Usage: 
+        @user_passes_test(
+            lambda u: user_in_group(u, "Admin")
+        )
+    '''
+    return user.groups.filter(name=group_name).exists()
 
 #==============================================================================
 @transaction.atomic
@@ -45,6 +57,8 @@ def initialize_risk_assessment(assessment):
             item_type=AssessmentItemType.RISK,
             risk=risk,
             owner=risk.owner,
+            assigned_at=timezone.now(),
+            status=AssessmentItemStatus.ASSIGNED,
         )
 
         RiskAssessment.objects.create(
@@ -78,6 +92,8 @@ def initialize_control_assessment(assessment):
             item_type=AssessmentItemType.CONTROL_MATURITY,
             control=control,
             owner=control.owner,
+            assigned_at=timezone.now(),
+            status=AssessmentItemStatus.ASSIGNED,
         )
 
         ControlMaturityAssessment.objects.create(
@@ -85,6 +101,7 @@ def initialize_control_assessment(assessment):
         )    
 
     return 0
+
 
 #==============================================================================
 def initialize_control_audit(assessment):
@@ -106,6 +123,8 @@ def initialize_control_audit(assessment):
             item_type=AssessmentItemType.CONTROL_TEST,
             control=control,
             owner=control.owner,
+            assigned_at=timezone.now(),
+            status=AssessmentItemStatus.ASSIGNED,
         )
 
         ControlTest.objects.create(
@@ -134,9 +153,9 @@ def assessment_out_main(request, assessment, tab, template):
     }
 
     if assessment.is_new:
-        ptitle = "CAR: Create Assessment"
+        ptitle = "Edit new Assessment"
     else:
-        ptitle = "CAR: Edit Assessment " + assessment.assessment_code
+        ptitle = "Edit Assessment " + assessment.assessment_code
 
     context = {"assessment": assessment, "form": form, "tab": tab, "rec_history": 
         rec_history, "ptitle": ptitle, "settings": settings,  }
@@ -235,9 +254,9 @@ def assessment_out_progress(request, assessment, tab, template):
     }
 
     if assessment.is_new:
-        ptitle = "CAR: Progress for new Assessment"
+        ptitle = "Progress for new Assessment"
     else:
-        ptitle = "CAR: Progress for Assessment " + assessment.assessment_code
+        ptitle = "Progress for Assessment " + assessment.assessment_code
 
     context = {"assessment": assessment, "items": items, "total_items": total_items, 
         "progress_chart": progress_chart, "tab": tab, "ptitle": ptitle, "settings": settings,  }
@@ -293,4 +312,164 @@ def assessment_out_history(request, assessment, tab, template):
         return redirect("car:assessment_edit",pk=assessment.pk)
 
 
+#==============================================================================
+def assess_risk_edit(request, item):
+
+    logger.debug("assess_risk_edit: out for assessment_item.pk=%s", item.pk,)
+    settings = AppSettings.get()        #-- Get App settings
+
+    risk_assessment = get_object_or_404(
+        RiskAssessment,
+        assessment_item=item,
+    )
+
+    if request.method == "POST":
+        form = RiskAssessmentForm(request.POST, instance=risk_assessment)
+
+        if form.is_valid():
+            form.save()
+
+            item.status = AssessmentItemStatus.COMPLETED
+            item.completed_at = timezone.now()
+            item.save(update_fields=[
+                "status",
+                "completed_at",
+            ])
+
+            return redirect("car:assess_item_list")
+
+    else:
+        form = RiskAssessmentForm(instance=risk_assessment)
     
+    ptitle = "Risk Assessment - assess_risk_edit"
+    context = {"item": item, "risk_assessment": risk_assessment, "form": form, "ptitle": ptitle, "settings": settings,  }
+    return render( request, "car/assess_risk_edit.html", context, )    
+
+
+#==============================================================================
+def assess_maturity_edit(request, item, status=''):
+
+    logger.debug("assess_maturity_edit: out for assessment_item.pk=%s, status=%s", item.pk, status,)
+    settings = AppSettings.get()        #-- Get App settings
+
+    maturity = get_object_or_404(
+        ControlMaturityAssessment,
+        assessment_item=item,
+    )
+
+    if request.method == "POST":
+        # ---------------------------------------------------------
+        # POST
+        # ---------------------------------------------------------
+        logger.debug( "assess_maturity_edit: POST data is: %s", request.POST )
+
+        form = ControlMaturityAssessmentForm(
+            request.POST,
+            instance=maturity,
+        )
+
+        # -------------------------------------
+        # Validate
+        # -------------------------------------
+        if form.is_valid():
+            logger.debug( "assess_maturity_edit: Form is valid. cleaned_data=%s", form.cleaned_data, )
+            
+            maturity = form.save(commit=False)
+            maturity.assessment_item = item
+            maturity.save()
+
+            logger.debug( "assess_maturity_edit: Control maturity assessment saved successfully", )
+
+            #-- Update status, if needed, from NOT_STARTED or ASSIGNED to IN_PROGRESS
+            if status == "completed":
+                item.status = AssessmentItemStatus.COMPLETED
+                item.completed_at = timezone.now()
+                item.completed_by = request.user
+                item.save(update_fields=[
+                    "status",
+                    "completed_at",
+                    "completed_by",
+                ])
+                logger.debug( "assess_maturity_edit: status COMPLETED updated successfully", )
+                response = HttpResponse()
+                response["HX-Redirect"] = reverse("car:assess_item_list")
+                return response
+
+            elif status == "not_applicable":
+                item.status = AssessmentItemStatus.NOT_APPLICABLE
+                item.completed_at = timezone.now()
+                item.completed_by = request.user
+                item.save(update_fields=[
+                    "status",
+                    "completed_at",
+                    "completed_by",
+                ])
+                logger.debug( "assess_maturity_edit: status NOT_APPLICABLE updated successfully", )
+                response = HttpResponse()
+                response["HX-Redirect"] = reverse("car:assess_item_list")
+                return response
+            
+
+            elif item.status in [
+                AssessmentItemStatus.NOT_STARTED,
+                AssessmentItemStatus.ASSIGNED,
+            ]:
+                item.status = AssessmentItemStatus.IN_PROGRESS
+                item.save(update_fields=["status",])
+                logger.debug( "assess_maturity_edit: AssessmentItem status updated successfully", )
+
+
+            return redirect("car:assess_item_list")
+
+        else:
+            logger.error( "ControlMaturityAssessmentForm validation failed")
+            logger.error( "Form errors: %s", form.errors)
+            logger.error( "Form errors as JSON: %s", form.errors.as_json() )
+            logger.error( "Non-field errors: %s", form.non_field_errors())
+            return render(request, "car/error.html", {"error_message": f"Could not valideate the form: {form.errors}"},)
+            messages.error(request,)
+
+    else:
+        form = ControlMaturityAssessmentForm(instance=maturity)
+
+    ptitle = "Control Maturity Assessment"
+    context = {"item": item, "maturity": maturity, "form": form, "ptitle": ptitle, "settings": settings,  }
+    return render( request, "car/assess_control_maturity_edit.html", context, )    
+
+
+#==============================================================================
+def assess_control_test_edit(request, item):
+
+    logger.debug("assess_control_test_edit: out for assessment_item.pk=%s", item.pk,)
+    settings = AppSettings.get()        #-- Get App settings
+
+    control_test = get_object_or_404(
+        ControlTest,
+        assessment_item=item,
+    )
+
+    if request.method == "POST":
+        form = ControlTestForm(
+            request.POST,
+            instance=control_test,
+        )
+
+        if form.is_valid():
+            control_test = form.save()
+
+            item.status = AssessmentItemStatus.COMPLETED
+            item.completed_at = timezone.now()
+            item.save(update_fields=[
+                "status",
+                "completed_at",
+            ])
+
+            return redirect("car:assess_item_list")
+
+    else:
+        form = ControlTestForm(instance=control_test)
+
+    ptitle = "Control Testing/Audit - assess_control_test_edit"
+    context = {"item": item, "control_test": control_test, "form": form, "ptitle": ptitle, "settings": settings,  }
+    return render( request, "car/assess_control_test_edit.html", context, )    
+

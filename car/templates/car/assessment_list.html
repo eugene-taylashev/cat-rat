@@ -10,9 +10,9 @@
         <thead>
           <tr>
             <th>Code</th>
+            <th>Title</th>
             <th>Type</th>
-            <th>Status</th>
-            <th>Title
+            <th>Status
                 <div style="float: right;"><a href="{% url 'car:assessment_edit' 0 %}">
 					<span title="Add new Assessment" class="button is-primary is-light">Add Assessment +</span></a>
 			    </div>
@@ -23,9 +23,9 @@
           <tr>
         {% for assess in assess_list %}
             <td><a href="{% url 'car:assessment_edit' assess.pk %}">{{ assess.assessment_code }}</a></td>
-            <td>{{ assess.assessment_type }}</td>
-            <td>{{ assess.status }}</td>
-            <td>{{ assess.title }}</td>
+            <td>{{ assess.title|slice:":80" }}</td>
+            <td>{{ assess.get_assessment_type_display }}</td>
+            <td>{{ assess.get_status_display }}</td>
           </tr><tr>
         {% empty %}
             <td colspan="4">There are currently no assessments.</td>
